@@ -1,0 +1,478 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../app/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model AccountPreferences {
+  id                    String            @id
+  userId                String            @unique
+  profileVisibility     ProfileVisibility @default(public)
+  createdAt             DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime          @db.Timestamptz(3)
+  showOnlineStatus      Boolean           @default(true)
+  onboardingCompletedAt DateTime?         @db.Timestamptz(3)
+  onboardingSkippedAt   DateTime?         @db.Timestamptz(3)
+  Users                 Users             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([profileVisibility])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Accounts {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  Users             Users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model AdminAuditLogs {
+  id         String   @id
+  adminId    String
+  action     String
+  targetType String
+  targetId   String?
+  details    Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  Users      Users    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([action, createdAt])
+  @@index([adminId, createdAt])
+  @@index([targetType, createdAt])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Bots {
+  id         String   @id
+  userId     String   @unique
+  botType    String   @default("yahtzee")
+  difficulty String   @default("medium")
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  Users      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([botType])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model EmailVerificationTokens {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Feedback {
+  id        String   @id
+  type      String
+  message   String
+  email     String?
+  pageUrl   String?
+  userId    String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  Users     Users?   @relation(fields: [userId], references: [id])
+
+  @@index([type, createdAt])
+  @@index([userId])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model FriendRequests {
+  id                                     String              @id
+  senderId                               String
+  receiverId                             String
+  status                                 FriendRequestStatus @default(pending)
+  createdAt                              DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt                              DateTime            @db.Timestamptz(3)
+  Users_FriendRequests_receiverIdToUsers Users               @relation("FriendRequests_receiverIdToUsers", fields: [receiverId], references: [id], onDelete: Cascade)
+  Users_FriendRequests_senderIdToUsers   Users               @relation("FriendRequests_senderIdToUsers", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([createdAt])
+  @@index([receiverId])
+  @@index([senderId])
+  @@index([status])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Friendships {
+  id                               String   @id
+  user1Id                          String
+  user2Id                          String
+  createdAt                        DateTime @default(now()) @db.Timestamptz(3)
+  Users_Friendships_user1IdToUsers Users    @relation("Friendships_user1IdToUsers", fields: [user1Id], references: [id], onDelete: Cascade)
+  Users_Friendships_user2IdToUsers Users    @relation("Friendships_user2IdToUsers", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+  @@index([createdAt])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model GameStateSnapshots {
+  id              String   @id
+  gameId          String
+  turnNumber      Int
+  playerId        String?
+  actionType      String
+  actionPayload   Json?
+  stateCompressed String
+  stateEncoding   String   @default("gzip-base64")
+  stateSize       Int
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  Games           Games    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId, createdAt])
+  @@index([gameId, turnNumber])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Games {
+  id                 String               @id
+  lobbyId            String
+  state              Json
+  status             GameStatus           @default(waiting)
+  gameType           GameType             @default(yahtzee)
+  abandonedAt        DateTime?            @db.Timestamptz(3)
+  currentTurn        Int                  @default(0)
+  lastMoveAt         DateTime             @default(now()) @db.Timestamptz(3)
+  createdAt          DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime             @db.Timestamptz(3)
+  startedAt          DateTime?            @db.Timestamptz(3)
+  endedAt            DateTime?            @db.Timestamptz(3)
+  durationSeconds    Int?
+  terminalMetadata   Json?
+  GameStateSnapshots GameStateSnapshots[]
+  Lobbies            Lobbies              @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  Players            Players[]
+
+  @@index([createdAt])
+  @@index([endedAt])
+  @@index([gameType, status])
+  @@index([lobbyId])
+  @@index([lobbyId, status, updatedAt])
+  @@index([startedAt])
+  @@index([status])
+  @@index([status, lastMoveAt])
+  @@index([status, updatedAt])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Lobbies {
+  id              String         @id
+  code            String         @unique
+  name            String
+  password        String?
+  maxPlayers      Int            @default(4)
+  turnTimer       Int            @default(60)
+  isActive        Boolean        @default(true)
+  gameType        String         @default("yahtzee")
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  creatorId       String
+  allowSpectators Boolean        @default(false)
+  maxSpectators   Int            @default(10)
+  spectatorCount  Int            @default(0)
+  Games           Games[]
+  Users           Users          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  LobbyInvites    LobbyInvites[]
+
+  @@index([createdAt])
+  @@index([creatorId])
+  @@index([isActive])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model LobbyInvites {
+  id                                  String    @id
+  lobbyId                             String
+  inviterId                           String
+  inviteeId                           String
+  channel                             String    @default("friends")
+  sentAt                              DateTime  @default(now()) @db.Timestamptz(3)
+  acceptedAt                          DateTime? @db.Timestamptz(3)
+  createdAt                           DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt                           DateTime  @db.Timestamptz(3)
+  Users_LobbyInvites_inviteeIdToUsers Users     @relation("LobbyInvites_inviteeIdToUsers", fields: [inviteeId], references: [id], onDelete: Cascade)
+  Users_LobbyInvites_inviterIdToUsers Users     @relation("LobbyInvites_inviterIdToUsers", fields: [inviterId], references: [id], onDelete: Cascade)
+  Lobbies                             Lobbies   @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+
+  @@index([acceptedAt])
+  @@index([inviteeId])
+  @@index([inviterId])
+  @@index([lobbyId])
+  @@index([sentAt])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model NotificationPreferences {
+  id                 String   @id
+  userId             String   @unique
+  gameInvites        Boolean  @default(true)
+  turnReminders      Boolean  @default(true)
+  friendRequests     Boolean  @default(true)
+  friendAccepted     Boolean  @default(true)
+  unsubscribedAll    Boolean  @default(false)
+  createdAt          DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime @db.Timestamptz(3)
+  inAppNotifications Boolean  @default(true)
+  Users              Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model Notifications {
+  id          String              @id
+  userId      String
+  type        NotificationType
+  channel     NotificationChannel @default(email)
+  status      NotificationStatus  @default(queued)
+  dedupeKey   String?
+  reason      String?
+  payload     Json?
+  processedAt DateTime?           @db.Timestamptz(3)
+  sentAt      DateTime?           @db.Timestamptz(3)
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime            @db.Timestamptz(3)
+  readAt      DateTime?           @db.Timestamptz(3)
+  Users       Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, channel, dedupeKey], map: "Notifications_queue_dedupe_idx", where: raw("((\"dedupeKey\" IS NOT NULL) AND (status = ANY (ARRAY['queued'::\"NotificationStatus\", 'processing'::\"NotificationStatus\"])))"))
+  @@index([dedupeKey])
+  @@index([type, status, sentAt], map: "Notifications_turn_reminder_sentAt_idx")
+  @@index([type, channel, status, createdAt])
+  @@index([userId, channel, createdAt])
+  @@index([userId, channel, readAt, createdAt])
+  @@index([userId, createdAt])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model OperationalAlertStates {
+  id              String    @id
+  alertKey        String    @unique
+  isOpen          Boolean   @default(false)
+  lastValue       Float?
+  lastTriggeredAt DateTime? @db.Timestamptz(3)
+  lastNotifiedAt  DateTime? @db.Timestamptz(3)
+  lastResolvedAt  DateTime? @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @db.Timestamptz(3)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model OperationalEvents {
+  id            String   @id
+  eventName     String
+  metricType    String
+  gameType      String?
+  isGuest       Boolean?
+  success       Boolean?
+  applied       Boolean?
+  latencyMs     Int?
+  targetMs      Int?
+  attemptsTotal Int?
+  reason        String?
+  stage         String?
+  statusCode    Int?
+  source        String?
+  payload       Json?
+  occurredAt    DateTime @default(now()) @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([eventName, occurredAt])
+  @@index([gameType, occurredAt])
+  @@index([metricType, occurredAt])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model PasswordResetTokens {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Players {
+  id         String   @id
+  gameId     String
+  userId     String
+  score      Int      @default(0)
+  finalScore Int?
+  placement  Int?
+  scorecard  String?
+  position   Int
+  isReady    Boolean  @default(false)
+  isWinner   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  Games      Games    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  Users      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userId])
+  @@index([gameId])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Sessions {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  Users        Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model SpyLocations {
+  id       String   @id
+  name     String   @unique
+  category String
+  roles    String[]
+  isActive Boolean  @default(true)
+
+  @@index([category])
+  @@index([isActive])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Users {
+  id                                              String                   @id
+  email                                           String?                  @unique
+  emailVerified                                   DateTime?                @db.Timestamptz(3)
+  username                                        String?                  @unique
+  friendCode                                      String?                  @unique
+  passwordHash                                    String?
+  image                                           String?
+  isGuest                                         Boolean                  @default(false)
+  lastActiveAt                                    DateTime                 @default(now()) @db.Timestamptz(3)
+  createdAt                                       DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt                                       DateTime                 @default(now()) @db.Timestamptz(3)
+  role                                            UserRole                 @default(user)
+  suspended                                       Boolean                  @default(false)
+  publicProfileId                                 String?                  @unique
+  pendingEmail                                    String?                  @unique
+  AccountPreferences                              AccountPreferences?
+  Accounts                                        Accounts[]
+  AdminAuditLogs                                  AdminAuditLogs[]
+  Bots                                            Bots?
+  Feedback                                        Feedback[]
+  FriendRequests_FriendRequests_receiverIdToUsers FriendRequests[]         @relation("FriendRequests_receiverIdToUsers")
+  FriendRequests_FriendRequests_senderIdToUsers   FriendRequests[]         @relation("FriendRequests_senderIdToUsers")
+  Friendships_Friendships_user1IdToUsers          Friendships[]            @relation("Friendships_user1IdToUsers")
+  Friendships_Friendships_user2IdToUsers          Friendships[]            @relation("Friendships_user2IdToUsers")
+  Lobbies                                         Lobbies[]
+  LobbyInvites_LobbyInvites_inviteeIdToUsers      LobbyInvites[]           @relation("LobbyInvites_inviteeIdToUsers")
+  LobbyInvites_LobbyInvites_inviterIdToUsers      LobbyInvites[]           @relation("LobbyInvites_inviterIdToUsers")
+  NotificationPreferences                         NotificationPreferences?
+  Notifications                                   Notifications[]
+  Players                                         Players[]
+  Sessions                                        Sessions[]
+
+  @@index([isGuest, lastActiveAt])
+  @@index([role])
+  @@index([suspended])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model VerificationTokens {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum FriendRequestStatus {
+  pending
+  accepted
+  rejected
+  cancelled
+}
+
+enum GameStatus {
+  waiting
+  playing
+  finished
+  abandoned
+  cancelled
+}
+
+enum GameType {
+  yahtzee
+  tic_tac_toe
+  rock_paper_scissors
+  memory
+  guess_the_spy
+  telephone_doodle
+  sketch_and_guess
+  liars_party
+  fake_artist
+  other
+}
+
+enum NotificationChannel {
+  email
+  in_app
+  push
+}
+
+enum NotificationStatus {
+  queued
+  processing
+  sent
+  skipped
+  failed
+}
+
+enum NotificationType {
+  game_invite
+  turn_reminder
+  friend_request
+  friend_accepted
+}
+
+enum ProfileVisibility {
+  public
+  friends
+  private
+}
+
+enum UserRole {
+  user
+  admin
+}
