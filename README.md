@@ -20,19 +20,19 @@ Administrators can manage users, monitor platform activity, and handle security 
 
 ```
 ┌─────────────────────┐     ┌─────────────────────┐
-│      Boardly        │     │  Boardly Control     │
-│   (main platform)   │     │      Panel           │
-│                     │     │                      │
-│  nextjs · nextauth  │     │  nextjs · nextauth   │
-│  prisma · tailwind  │     │  prisma · tailwind   │
-└────────┬────────────┘     └──────────┬───────────┘
-         │                             │
-         └──────────┬──────────────────┘
-                    │
-         ┌──────────▼──────────┐
-         │  Supabase PostgreSQL │
-         │  (shared database)   │
-         └──────────────────────┘
+│      Boardly        │     │  Boardly Control    │
+│   (main platform)   │     │      Panel          │
+│                     │     │                     │
+│  nextjs · nextauth  │     │  nextjs · nextauth  │
+│  prisma · tailwind  │     │  prisma · tailwind  │
+└──────────┬──────────┘     └──────────┬──────────┘
+           │                           │
+           └─────────────┬─────────────┘
+                         │
+              ┌──────────▼──────────┐
+              │ Supabase PostgreSQL │
+              │  (shared database)  │
+              └─────────────────────┘
 ```
 
 One database, two separate services. The control panel has its own auth and is deployed independently.
