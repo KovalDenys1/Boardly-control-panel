@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Boardly Control Panel
+
+An admin control panel for the [Boardly](https://github.com/KovalDenys1/boardly) platform. Built as a separate Next.js application that connects to the same PostgreSQL database as Boardly, with its own authentication, API routes, and deployment.
+
+Administrators can manage users, monitor platform activity, and handle security incidents — all from one interface.
+
+---
+
+## Features
+
+- **Admin-only authentication** — credentials login via NextAuth, restricted to users with `role: admin`
+- **Dashboard** — real-time platform stats (users, active games, suspended accounts)
+- **User management** — view all users, suspend and unsuspend accounts with full audit logging
+- **Games overview** — monitor all games by status, type, and player count
+- **Help page** — built-in documentation for new administrators
+
+---
+
+## Architecture
+
+```
+┌─────────────────────┐     ┌─────────────────────┐
+│      Boardly        │     │  Boardly Control     │
+│   (main platform)   │     │      Panel           │
+│                     │     │                      │
+│  nextjs · nextauth  │     │  nextjs · nextauth   │
+│  prisma · tailwind  │     │  prisma · tailwind   │
+└────────┬────────────┘     └──────────┬───────────┘
+         │                             │
+         └──────────┬──────────────────┘
+                    │
+         ┌──────────▼──────────┐
+         │  Supabase PostgreSQL │
+         │  (shared database)   │
+         └──────────────────────┘
+```
+
+One database, two separate services. The control panel has its own auth and is deployed independently.
+
+---
+
+## Tech Stack
+
+| Technology | Why |
+|------------|-----|
+| Next.js 16 (App Router) | Combines frontend and backend in one project |
+| TypeScript | Type safety, catches errors at compile time |
+| Prisma ORM | Type-safe database queries, automatic SQL injection protection |
+| PostgreSQL (Supabase) | Same database as Boardly — no data duplication needed |
+| NextAuth v5 | Industry-standard auth — handles sessions, CSRF protection, and security |
+| bcryptjs | One-way password hashing — passwords can't be reversed even if the database leaks |
+| Tailwind CSS | Fast to build with, consistent design |
+| Vercel | One-click deploy from Git, automatic HTTPS, scales on demand |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- Access to the Boardly Supabase database
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/KovalDenys1/Boardly-control-panel
+cd Boardly-control-panel
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+DATABASE_URL="postgresql://..."      # Supabase pooler URL (port 6543)
+DIRECT_URL="postgresql://..."        # Supabase direct URL (port 5432)
+AUTH_SECRET="..."                    # Generate: openssl rand -base64 32
+AUTH_URL="http://localhost:3000"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm db:generate
+pnpm dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) and log in with an admin account.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Security
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- All routes are protected by middleware — unauthenticated users are redirected to `/login`
+- API routes verify the session independently of middleware
+- Every admin action (suspend/unsuspend) is logged in `AdminAuditLogs` with timestamp, admin ID, and target
+- Passwords are never stored in plain text — bcrypt hashing with salt
+- Environment variables are never committed to Git
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The app is deployed on Vercel. Environment variables are configured in the Vercel dashboard.
+
+```bash
+vercel --prod
+```
+
+**Environment variables to set in Vercel:**
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `AUTH_SECRET`
+- `AUTH_URL`
+
+---
+
+## Developer
+
+**Denys Koval** — [github.com/KovalDenys1](https://github.com/KovalDenys1)
