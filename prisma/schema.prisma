@@ -1,11 +1,13 @@
 generator client {
   provider        = "prisma-client"
   output          = "../app/generated/prisma"
-  previewFeatures = ["partialIndexes"]
+  previewFeatures = []
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -266,7 +268,7 @@ model Notifications {
   readAt      DateTime?           @db.Timestamptz(3)
   Users       Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, type, channel, dedupeKey], map: "Notifications_queue_dedupe_idx", where: raw("((\"dedupeKey\" IS NOT NULL) AND (status = ANY (ARRAY['queued'::\"NotificationStatus\", 'processing'::\"NotificationStatus\"])))"))
+  @@unique([userId, type, channel, dedupeKey], map: "Notifications_queue_dedupe_idx")
   @@index([dedupeKey])
   @@index([type, status, sentAt], map: "Notifications_turn_reminder_sentAt_idx")
   @@index([type, channel, status, createdAt])
