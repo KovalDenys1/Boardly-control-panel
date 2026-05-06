@@ -372,6 +372,20 @@ input, button, textarea, select { font: inherit; color: inherit; }
   background: rgba(0,0,0,0.3); color: var(--mute); font-size: var(--fz-xs);
 }
 
+/* ── User search bar ─────────────────────────────────────────────────── */
+.bk-search-bar   {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; border: 1px dashed var(--line-2);
+  padding: 6px 12px; background: var(--bg-2);
+}
+.bk-search-prompt { color: var(--accent); font-size: var(--fz-xs); flex-shrink: 0; }
+.bk-search-input  {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
+}
+.bk-search-input::placeholder { color: var(--mute-2); }
+.bk-search-count  { color: var(--mute); font-size: var(--fz-xs); flex-shrink: 0; }
+
 /* ── Ban form (inline in users table) ───────────────────────────────── */
 .bk-ban-form     { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 180px; }
 .bk-ban-input    {

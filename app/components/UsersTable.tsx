@@ -56,15 +56,25 @@ export function UsersTable({
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [openBanForm, setOpenBanForm] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
   }
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) =>
+      (u.username ?? "").toLowerCase().includes(q) ||
+      (u.email ?? "").toLowerCase().includes(q),
+    );
+  }, [users, query]);
+
   const sorted = useMemo(
-    () => sortKey ? [...users].sort((a, b) => compare(a, b, sortKey, sortDir)) : users,
-    [users, sortKey, sortDir],
+    () => sortKey ? [...filtered].sort((a, b) => compare(a, b, sortKey, sortDir)) : filtered,
+    [filtered, sortKey, sortDir],
   );
 
   function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string }) {
@@ -83,6 +93,23 @@ export function UsersTable({
   }
 
   return (
+    <>
+    <div className="bk-search-bar">
+      <span className="bk-search-prompt">$</span>
+      <input
+        type="text"
+        className="bk-search-input"
+        placeholder="search username or email..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        spellCheck={false}
+      />
+      {query && (
+        <span className="bk-search-count">
+          {sorted.length} / {users.length}
+        </span>
+      )}
+    </div>
     <table className="bk-table">
       <thead>
         <tr>
@@ -193,5 +220,6 @@ export function UsersTable({
         ))}
       </tbody>
     </table>
+    </>
   );
 }
