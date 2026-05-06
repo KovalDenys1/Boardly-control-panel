@@ -344,9 +344,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-sort-icon--active { color: var(--accent); }
 
 /* ── Help page ───────────────────────────────────────────────────────── */
-.bk-help-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.bk-help-grid  { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
 .bk-help-card  { display: flex; flex-direction: column; }
-.bk-help-card:nth-child(3), .bk-help-card:nth-child(5) { grid-column: span 2; }
 .bk-help-head, .bk-help-foot {
   display: flex; align-items: center; font-size: var(--fz-xs); color: var(--mute);
   white-space: nowrap; overflow: hidden;
@@ -372,6 +371,22 @@ input, button, textarea, select { font: inherit; color: inherit; }
   margin: 14px 0 0; padding: 10px 12px; border: 1px dashed var(--line-2);
   background: rgba(0,0,0,0.3); color: var(--mute); font-size: var(--fz-xs);
 }
+
+/* ── Ban form (inline in users table) ───────────────────────────────── */
+.bk-ban-form     { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 180px; }
+.bk-ban-input    {
+  width: 100%; background: var(--bg-2); border: 1px dashed var(--line-2);
+  color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
+  padding: 4px 8px; outline: none;
+}
+.bk-ban-input:focus { border-color: var(--accent); }
+.bk-ban-select   {
+  width: 100%; background: var(--bg-2); border: 1px dashed var(--line-2);
+  color: var(--mute); font-family: var(--mono); font-size: var(--fz-xs);
+  padding: 4px 8px; outline: none; cursor: pointer;
+}
+.bk-ban-select:focus { border-color: var(--accent); }
+.bk-ban-actions  { display: flex; gap: 6px; }
 
 /* ── Mobile top bar ──────────────────────────────────────────────────── */
 .bk-topbar {
@@ -441,13 +456,6 @@ input, button, textarea, select { font: inherit; color: inherit; }
   }
   .bk-stat-value {
     font-size: 36px;
-  }
-  .bk-help-grid {
-    grid-template-columns: 1fr;
-  }
-  .bk-help-card:nth-child(3),
-  .bk-help-card:nth-child(5) {
-    grid-column: span 1;
   }
   .bk-page-title {
     font-size: 22px;

@@ -198,12 +198,12 @@ model Lobbies {
   isActive        Boolean        @default(true)
   gameType        String         @default("yahtzee")
   createdAt       DateTime       @default(now()) @db.Timestamptz(3)
-  creatorId       String
+  creatorId       String?
   allowSpectators Boolean        @default(false)
   maxSpectators   Int            @default(10)
   spectatorCount  Int            @default(0)
   Games           Games[]
-  Users           Users          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  Users           Users?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   LobbyInvites    LobbyInvites[]
 
   @@index([createdAt])
@@ -386,6 +386,8 @@ model Users {
   updatedAt                                       DateTime                 @default(now()) @db.Timestamptz(3)
   role                                            UserRole                 @default(user)
   suspended                                       Boolean                  @default(false)
+  banReason                                       String?
+  banExpiresAt                                    DateTime?                @db.Timestamptz(3)
   publicProfileId                                 String?                  @unique
   pendingEmail                                    String?                  @unique
   AccountPreferences                              AccountPreferences?

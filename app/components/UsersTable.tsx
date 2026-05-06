@@ -4,10 +4,12 @@ import { useState, useMemo } from "react";
 
 export type UserRow = {
   id: string;
-  email: string;
+  email: string | null;
   username: string | null;
   role: string;
   suspended: boolean;
+  banReason: string | null;
+  banExpiresAt: string | null;
   createdAt: string;
   lastActiveAt: string;
 };
@@ -22,10 +24,17 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function fmtExpiry(iso: string | null) {
+  if (!iso) return "permanent";
+  const d = new Date(iso);
+  if (d < new Date()) return "expired";
+  return `until ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+}
+
 function compare(a: UserRow, b: UserRow, key: SortKey, dir: SortDir): number {
   let va: string | number, vb: string | number;
   switch (key) {
-    case "username":     va = (a.username ?? a.email).toLowerCase(); vb = (b.username ?? b.email).toLowerCase(); break;
+    case "username":     va = (a.username ?? a.email ?? "").toLowerCase(); vb = (b.username ?? b.email ?? "").toLowerCase(); break;
     case "role":         va = a.role; vb = b.role; break;
     case "createdAt":    va = new Date(a.createdAt).getTime();      vb = new Date(b.createdAt).getTime();      break;
     case "lastActiveAt": va = new Date(a.lastActiveAt).getTime();   vb = new Date(b.lastActiveAt).getTime();   break;
@@ -46,6 +55,7 @@ export function UsersTable({
 }) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [openBanForm, setOpenBanForm] = useState<string | null>(null);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => (d === "asc" ? "desc" : "asc"));
@@ -92,7 +102,7 @@ export function UsersTable({
             <td className="bk-td-num" style={{ color: "var(--mute)" }}>{String(i + 1).padStart(2, "0")}</td>
             <td>
               <div className="bk-cell-user-name">{user.username ?? "—"}</div>
-              <div className="bk-cell-user-mail">{user.email}</div>
+              <div className="bk-cell-user-mail">{user.email ?? "—"}</div>
             </td>
             <td>
               {user.role === "admin" ? (
@@ -114,22 +124,69 @@ export function UsersTable({
             </td>
             <td>
               {user.suspended ? (
-                <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span></span>
+                <div>
+                  <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span></span>
+                  {user.banReason && (
+                    <div style={{ color: "var(--mute)", fontSize: "var(--fz-xs)", marginTop: 3 }}>{user.banReason}</div>
+                  )}
+                  <div style={{ color: "var(--mute-2)", fontSize: "var(--fz-xs)", marginTop: 1 }}>
+                    {fmtExpiry(user.banExpiresAt)}
+                  </div>
+                </div>
               ) : (
                 <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span></span>
               )}
             </td>
             <td className="bk-td-right">
               {user.role !== "admin" && (
-                <form action={handleSuspend}>
-                  <input type="hidden" name="userId" value={user.id} />
-                  <input type="hidden" name="action" value={user.suspended ? "unsuspend" : "suspend"} />
-                  <button type="submit" className={`bk-btn ${user.suspended ? "bk-btn--neutral" : "bk-btn--bad"}`}>
+                user.suspended ? (
+                  <form action={handleSuspend}>
+                    <input type="hidden" name="userId" value={user.id} />
+                    <input type="hidden" name="action" value="unsuspend" />
+                    <button type="submit" className="bk-btn bk-btn--neutral">
+                      <span className="bk-btn-brk">[</span>
+                      <span className="bk-btn-label">UNSUSPEND</span>
+                      <span className="bk-btn-brk">]</span>
+                    </button>
+                  </form>
+                ) : openBanForm === user.id ? (
+                  <form action={handleSuspend} className="bk-ban-form">
+                    <input type="hidden" name="userId" value={user.id} />
+                    <input type="hidden" name="action" value="suspend" />
+                    <input
+                      type="text"
+                      name="banReason"
+                      placeholder="reason (optional)"
+                      className="bk-ban-input"
+                      maxLength={200}
+                    />
+                    <select name="banDuration" className="bk-ban-select">
+                      <option value="0">permanent</option>
+                      <option value="1">1 day</option>
+                      <option value="3">3 days</option>
+                      <option value="7">7 days</option>
+                      <option value="30">30 days</option>
+                    </select>
+                    <div className="bk-ban-actions">
+                      <button type="submit" className="bk-btn bk-btn--bad">
+                        <span className="bk-btn-brk">[</span>
+                        <span className="bk-btn-label">CONFIRM</span>
+                        <span className="bk-btn-brk">]</span>
+                      </button>
+                      <button type="button" className="bk-btn bk-btn--neutral" onClick={() => setOpenBanForm(null)}>
+                        <span className="bk-btn-brk">[</span>
+                        <span className="bk-btn-label">CANCEL</span>
+                        <span className="bk-btn-brk">]</span>
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button type="button" className="bk-btn bk-btn--bad" onClick={() => setOpenBanForm(user.id)}>
                     <span className="bk-btn-brk">[</span>
-                    <span className="bk-btn-label">{user.suspended ? "UNSUSPEND" : "SUSPEND"}</span>
+                    <span className="bk-btn-label">SUSPEND</span>
                     <span className="bk-btn-brk">]</span>
                   </button>
-                </form>
+                )
               )}
             </td>
           </tr>

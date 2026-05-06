@@ -6,19 +6,36 @@ import { UsersTable } from "@/app/components/UsersTable";
 async function getUsers() {
   return prisma.users.findMany({
     where: { isGuest: false },
-    select: { id: true, email: true, username: true, role: true, suspended: true, createdAt: true, lastActiveAt: true },
+    select: {
+      id: true, email: true, username: true, role: true,
+      suspended: true, banReason: true, banExpiresAt: true,
+      createdAt: true, lastActiveAt: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 }
 
-async function toggleSuspend(userId: string, suspend: boolean, adminId: string) {
-  await prisma.users.update({ where: { id: userId }, data: { suspended: suspend } });
+async function toggleSuspend(
+  userId: string,
+  suspend: boolean,
+  adminId: string,
+  banReason?: string | null,
+  banExpiresAt?: Date | null,
+) {
+  await prisma.users.update({
+    where: { id: userId },
+    data: {
+      suspended: suspend,
+      banReason: suspend ? (banReason || null) : null,
+      banExpiresAt: suspend ? (banExpiresAt ?? null) : null,
+    },
+  });
   await prisma.adminAuditLogs.create({
     data: {
       id: crypto.randomUUID(), adminId,
       action: suspend ? "suspend_user" : "unsuspend_user",
       targetType: "user", targetId: userId,
-      details: { suspended: suspend },
+      details: { suspended: suspend, banReason: banReason ?? null },
     },
   });
 }
@@ -30,6 +47,7 @@ export default async function UsersPage() {
 
   const users = raw.map((u) => ({
     ...u,
+    banExpiresAt: u.banExpiresAt?.toISOString() ?? null,
     createdAt: u.createdAt.toISOString(),
     lastActiveAt: u.lastActiveAt.toISOString(),
   }));
@@ -38,7 +56,22 @@ export default async function UsersPage() {
     "use server";
     const userId = formData.get("userId") as string;
     const action = formData.get("action") as string;
-    await toggleSuspend(userId, action === "suspend", adminId);
+    const banReason = formData.get("banReason") as string | null;
+    const banDuration = formData.get("banDuration") as string | null;
+
+    let banExpiresAt: Date | null = null;
+    if (action === "suspend" && banDuration && banDuration !== "0") {
+      const days = parseInt(banDuration, 10);
+      banExpiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    }
+
+    await toggleSuspend(
+      userId,
+      action === "suspend",
+      adminId,
+      banReason || null,
+      banExpiresAt,
+    );
     revalidatePath("/users");
   }
 
