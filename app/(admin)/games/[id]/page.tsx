@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 async function getGame(id: string) {
   return prisma.games.findUnique({
@@ -108,6 +110,36 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   const game = await getGame(id);
   if (!game) notFound();
 
+  const session = await auth();
+  const adminId = session!.user!.id!;
+
+  async function handleForceEnd() {
+    "use server";
+    const s = await auth();
+    if (!s?.user || (s.user as { role?: string }).role !== "admin") return;
+    const now = new Date();
+    const current = await prisma.games.findUnique({ where: { id }, select: { startedAt: true } });
+    const durationSeconds = current?.startedAt
+      ? Math.floor((now.getTime() - current.startedAt.getTime()) / 1000)
+      : null;
+    await prisma.games.update({
+      where: { id },
+      data: { status: "abandoned", endedAt: now, abandonedAt: now, ...(durationSeconds ? { durationSeconds } : {}) },
+    });
+    await prisma.adminAuditLogs.create({
+      data: {
+        id: crypto.randomUUID(),
+        adminId: (s.user as { id: string }).id,
+        action: "force_end_game",
+        targetType: "game",
+        targetId: id,
+        details: { previousStatus: game!.status },
+      },
+    });
+    revalidatePath(`/games/${id}`);
+    redirect(`/games/${id}`);
+  }
+
   const lobby = game.Lobbies;
   const creator = lobby?.Users;
 
@@ -157,6 +189,15 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {statusBadge(game.status)}
+            {(game.status === "playing" || game.status === "waiting") && (
+              <form action={handleForceEnd}>
+                <button type="submit" className="bk-btn bk-btn--bad">
+                  <span className="bk-btn-brk">[</span>
+                  <span className="bk-btn-label">FORCE END</span>
+                  <span className="bk-btn-brk">]</span>
+                </button>
+              </form>
+            )}
             <Link href="/games" className="bk-btn bk-btn--neutral">
               <span className="bk-btn-brk">[</span>
               <span className="bk-btn-label">← BACK</span>
