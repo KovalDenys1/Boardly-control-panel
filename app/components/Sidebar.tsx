@@ -9,7 +9,9 @@ const links = [
   { href: "/dashboard", label: "dashboard", cmd: "01" },
   { href: "/users",     label: "users",     cmd: "02" },
   { href: "/games",     label: "games",     cmd: "03" },
-  { href: "/help",      label: "help",      cmd: "04" },
+  { href: "/monitor",   label: "monitor",   cmd: "04" },
+  { href: "/audit",     label: "audit",     cmd: "05" },
+  { href: "/help",      label: "help",      cmd: "06" },
 ];
 
 export function Sidebar({ email }: { email: string }) {
