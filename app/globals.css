@@ -503,13 +503,37 @@ input, button, textarea, select { font: inherit; color: inherit; }
 
 /* ── Tablet (768–1023px) ─────────────────────────────────────────────── */
 @media (min-width: 768px) and (max-width: 1023px) {
+  .bk-shell {
+    grid-template-columns: 200px 1fr;
+  }
   .bk-main {
     padding: 20px 24px 48px;
+  }
+  .bk-page-title {
+    font-size: 26px;
+  }
+  .bk-page-title-row {
+    flex-direction: column; align-items: flex-start; gap: 12px;
+  }
+  .bk-pill-row {
+    flex-wrap: wrap; gap: 8px;
+  }
+  .bk-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bk-stat-value {
+    font-size: 38px;
   }
   .bk-gtbar {
     grid-template-columns: 120px 1fr 160px;
   }
+  .bk-filter-bar {
+    flex-wrap: wrap;
+  }
   .bk-table-wrap {
     overflow-x: auto;
+  }
+  .bk-help-grid {
+    max-width: 100%;
   }
 }
