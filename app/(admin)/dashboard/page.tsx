@@ -1,21 +1,49 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 
+function dayKey(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function buildDays() {
+  const days: { key: string; label: string }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = dayKey(d);
+    const label = d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+    days.push({ key, label });
+  }
+  return days;
+}
+
 async function getStats() {
-  const [totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType] =
-    await Promise.all([
-      prisma.users.count({ where: { isGuest: false } }),
-      prisma.users.count({ where: { isGuest: false, suspended: false } }),
-      prisma.users.count({ where: { suspended: true } }),
-      prisma.games.count({ where: { status: 'playing' } }),
-      prisma.games.count(),
-      prisma.games.groupBy({
-        by: ['gameType'],
-        _count: { id: true },
-        orderBy: { _count: { id: 'desc' } },
-      }),
-    ])
-  return { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType }
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const [
+    totalUsers, registeredUsers, suspendedUsers,
+    activeGames, totalGames, gamesByType,
+    recentGames, recentUsers,
+  ] = await Promise.all([
+    prisma.users.count({ where: { isGuest: false } }),
+    prisma.users.count({ where: { isGuest: false, suspended: false } }),
+    prisma.users.count({ where: { suspended: true } }),
+    prisma.games.count({ where: { status: 'playing' } }),
+    prisma.games.count(),
+    prisma.games.groupBy({ by: ['gameType'], _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
+    prisma.games.findMany({ where: { createdAt: { gte: sevenDaysAgo } }, select: { createdAt: true } }),
+    prisma.users.findMany({ where: { isGuest: false, createdAt: { gte: sevenDaysAgo } }, select: { createdAt: true } }),
+  ]);
+
+  const gamesByDay: Record<string, number> = {};
+  for (const g of recentGames) gamesByDay[dayKey(g.createdAt)] = (gamesByDay[dayKey(g.createdAt)] ?? 0) + 1;
+
+  const usersByDay: Record<string, number> = {};
+  for (const u of recentUsers) usersByDay[dayKey(u.createdAt)] = (usersByDay[dayKey(u.createdAt)] ?? 0) + 1;
+
+  return { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay };
 }
 
 const gameTypeLabels: Record<string, string> = {
@@ -43,8 +71,15 @@ function AsciiBar({ pct }: { pct: number }) {
 }
 
 export default async function DashboardPage() {
-  const { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType } =
+  const { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay } =
     await getStats()
+
+  const days = buildDays()
+  const maxGames = Math.max(...days.map((d) => gamesByDay[d.key] ?? 0), 1)
+  const maxUsers = Math.max(...days.map((d) => usersByDay[d.key] ?? 0), 1)
+  const todayKey = dayKey(new Date())
+  const gamesTotal7d = days.reduce((s, d) => s + (gamesByDay[d.key] ?? 0), 0)
+  const usersTotal7d = days.reduce((s, d) => s + (usersByDay[d.key] ?? 0), 0)
 
   return (
     <div className="bk-page">
@@ -124,6 +159,70 @@ export default async function DashboardPage() {
           <div className="bk-stat-value">{totalGames.toLocaleString()}</div>
           <div className="bk-stat-sub">all time across all types</div>
         </Link>
+      </div>
+
+      {/* 7-day activity */}
+      <div className="bk-section">
+        <div className="bk-section-head">
+          <span className="bk-section-bracket">┌─</span>
+          <span className="bk-section-title">activity_7d</span>
+          <span className="bk-section-fill" style={{ color: 'var(--mute-2)' }}>{'─'.repeat(60)}</span>
+          <span className="bk-section-bracket">─┐</span>
+        </div>
+        <div className="bk-section-body">
+          <div className="bk-activity-legend">
+            <span style={{ color: 'var(--mute)', fontSize: 'var(--fz-xs)', letterSpacing: '0.1em' }}>
+              <span style={{ color: 'var(--accent)' }}>█</span> games &nbsp;
+              <span style={{ color: 'var(--mute)' }}>█</span> users &nbsp;·&nbsp;
+              last 7 days &nbsp;·&nbsp;
+              <span style={{ color: 'var(--fg-strong)' }}>{gamesTotal7d}</span> games &nbsp;
+              <span style={{ color: 'var(--mute)' }}>/</span> &nbsp;
+              <span style={{ color: 'var(--fg-strong)' }}>{usersTotal7d}</span> new users
+            </span>
+          </div>
+          <div className="bk-activity-grid">
+            {days.map((d) => {
+              const gc = gamesByDay[d.key] ?? 0;
+              const uc = usersByDay[d.key] ?? 0;
+              const gPct = Math.round((gc / maxGames) * 100);
+              const uPct = Math.round((uc / maxUsers) * 100);
+              const isToday = d.key === todayKey;
+              return (
+                <div key={d.key} className="bk-activity-col">
+                  <div className="bk-activity-bars">
+                    <div className="bk-activity-bar-wrap">
+                      <div
+                        className="bk-activity-bar bk-activity-bar--games"
+                        style={{ height: `${Math.max(gPct, 4)}%`, opacity: isToday ? 1 : 0.75 }}
+                      />
+                    </div>
+                    <div className="bk-activity-bar-wrap">
+                      <div
+                        className="bk-activity-bar bk-activity-bar--users"
+                        style={{ height: `${Math.max(uPct, 4)}%`, opacity: isToday ? 1 : 0.75 }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bk-activity-counts">
+                    <span style={{ color: 'var(--accent)' }}>{gc}</span>
+                    <span style={{ color: 'var(--mute-2)' }}>/</span>
+                    <span style={{ color: 'var(--mute)' }}>{uc}</span>
+                  </div>
+                  <div className={`bk-activity-label${isToday ? ' bk-activity-label--today' : ''}`}>
+                    {d.label.split(' ').map((part, i) => (
+                      <span key={i} style={{ display: 'block', lineHeight: 1.3 }}>{part}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="bk-section-foot">
+          <span className="bk-section-bracket">└</span>
+          <span className="bk-section-fill" style={{ color: 'var(--mute-2)' }}>{'─'.repeat(80)}</span>
+          <span className="bk-section-bracket">┘</span>
+        </div>
       </div>
 
       {/* Games by type */}
