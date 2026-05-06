@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { MatrixCanvas } from "@/app/components/MatrixCanvas";
 
 const ASCII = `
  ██████╗  ██████╗  █████╗ ██████╗ ██╗  ██╗   ██╗
@@ -41,6 +42,7 @@ export default function LoginPage() {
   return (
     <div className="bk-login-root">
       <div className="bk-login-bg" aria-hidden="true" />
+      <MatrixCanvas />
       <div className="bk-scanlines" aria-hidden="true" />
 
       <div className="bk-login-window">
