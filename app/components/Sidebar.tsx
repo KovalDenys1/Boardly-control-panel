@@ -11,7 +11,8 @@ const links = [
   { href: "/games",     label: "games",     cmd: "03" },
   { href: "/monitor",   label: "monitor",   cmd: "04" },
   { href: "/audit",     label: "audit",     cmd: "05" },
-  { href: "/help",      label: "help",      cmd: "06" },
+  { href: "/feedback",  label: "feedback",  cmd: "06" },
+  { href: "/help",      label: "help",      cmd: "07" },
 ];
 
 export function Sidebar({ email }: { email: string }) {
@@ -39,13 +40,15 @@ export function Sidebar({ email }: { email: string }) {
       <aside className={`bk-sidebar${isOpen ? " bk-sidebar--open" : ""}`}>
         <div>
           <div className="bk-logo">
-            <div className="bk-logo-row">
-              <span className="bk-logo-prompt">$</span>
-              <span className="bk-logo-name">boardly</span>
-              <span className="bk-cursor">▊</span>
-              <button className="bk-sb-close" onClick={close} aria-label="Close menu">✕</button>
-            </div>
-            <div className="bk-logo-sub">// CONTROL.PANEL v1.0</div>
+            <Link href="/dashboard" onClick={close} style={{ textDecoration: "none", color: "inherit" }}>
+              <div className="bk-logo-row">
+                <span className="bk-logo-prompt">$</span>
+                <span className="bk-logo-name">boardly</span>
+                <span className="bk-cursor">▊</span>
+                <button className="bk-sb-close" onClick={(e) => { e.preventDefault(); e.stopPropagation(); close(); }} aria-label="Close menu">✕</button>
+              </div>
+              <div className="bk-logo-sub">// CONTROL.PANEL v1.0</div>
+            </Link>
           </div>
 
           <div className="bk-sb-section">
