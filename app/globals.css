@@ -295,7 +295,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-section-title   { color: var(--accent); margin: 0 10px; font-weight: 600; }
 .bk-section-body    {
   border-left: 1px solid var(--line); border-right: 1px solid var(--line);
-  background: var(--bg-2); padding: 16px 20px;
+  background: var(--bg-2); padding: 16px 20px; min-width: 0;
 }
 .bk-gtbar {
   display: grid; grid-template-columns: 160px 1fr 220px;
@@ -756,6 +756,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
   padding: 0 2px;
   color: var(--mute);
   font-variant-numeric: tabular-nums;
+  min-width: 0; overflow: hidden;
 }
 .bk-chart-xlabel {
   flex: 1 1 0;
@@ -860,4 +861,6 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .bk-kpi-grid { grid-template-columns: 1fr; }
   .bk-hbrow { grid-template-columns: 1fr; gap: 4px; }
   .bk-hbrow-meta { text-align: left; }
+  .bk-chart-wrap { overflow-x: auto; }
+  .bk-chart-wrap .bk-chart { min-width: 460px; }
 }

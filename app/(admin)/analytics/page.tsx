@@ -82,6 +82,7 @@ function VBarChart({ data, getX, getY, xLabel, tone = "ok", height = 180, ticks 
   const tickVals = Array.from({ length: ticks + 1 }, (_, i) => Math.round(niceMax * (1 - i / ticks)));
 
   return (
+    <div className="bk-chart-wrap">
     <div className="bk-chart">
       <div className="bk-chart-yaxis" style={{ height }}>
         {tickVals.map((v, i) => (
@@ -116,6 +117,7 @@ function VBarChart({ data, getX, getY, xLabel, tone = "ok", height = 180, ticks 
           ))}
         </div>
       </div>
+    </div>
     </div>
   );
 }
