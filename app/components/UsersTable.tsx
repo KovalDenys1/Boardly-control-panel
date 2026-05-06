@@ -12,16 +12,19 @@ export type UserRow = {
   lastActiveAt: string;
 };
 
-type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "status";
+type SortKey = "index" | "username" | "role" | "createdAt" | "lastActiveAt" | "status";
 type SortDir = "asc" | "desc";
+
+type IndexedUserRow = UserRow & { _idx: number };
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function compare(a: UserRow, b: UserRow, key: SortKey, dir: SortDir): number {
+function compare(a: IndexedUserRow, b: IndexedUserRow, key: SortKey, dir: SortDir): number {
   let va: string | number, vb: string | number;
   switch (key) {
+    case "index":      va = a._idx; vb = b._idx; break;
     case "username":   va = (a.username ?? a.email).toLowerCase(); vb = (b.username ?? b.email).toLowerCase(); break;
     case "role":       va = a.role; vb = b.role; break;
     case "createdAt":  va = new Date(a.createdAt).getTime();     vb = new Date(b.createdAt).getTime();     break;
@@ -48,9 +51,14 @@ export function UsersTable({
     else { setSortKey(key); setSortDir("asc"); }
   }
 
+  const indexed = useMemo<IndexedUserRow[]>(
+    () => users.map((u, i) => ({ ...u, _idx: i })),
+    [users],
+  );
+
   const sorted = useMemo(
-    () => sortKey ? [...users].sort((a, b) => compare(a, b, sortKey, sortDir)) : users,
-    [users, sortKey, sortDir],
+    () => sortKey ? [...indexed].sort((a, b) => compare(a, b, sortKey, sortDir)) : indexed,
+    [indexed, sortKey, sortDir],
   );
 
   function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string }) {
@@ -72,7 +80,7 @@ export function UsersTable({
     <table className="bk-table">
       <thead>
         <tr>
-          <th className="bk-th-num">#</th>
+          <Th col="index" className="bk-th-num">#</Th>
           <Th col="username">USER</Th>
           <Th col="role">ROLE</Th>
           <Th col="createdAt">JOINED</Th>
