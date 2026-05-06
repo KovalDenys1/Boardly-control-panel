@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 
 async function getStats() {
   const [totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType] =
@@ -7,40 +7,44 @@ async function getStats() {
       prisma.users.count({ where: { isGuest: false } }),
       prisma.users.count({ where: { isGuest: false, suspended: false } }),
       prisma.users.count({ where: { suspended: true } }),
-      prisma.games.count({ where: { status: "playing" } }),
+      prisma.games.count({ where: { status: 'playing' } }),
       prisma.games.count(),
-      prisma.games.groupBy({ by: ["gameType"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
-    ]);
-  return { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType };
+      prisma.games.groupBy({
+        by: ['gameType'],
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+      }),
+    ])
+  return { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType }
 }
 
 const gameTypeLabels: Record<string, string> = {
-  yahtzee:             "Yahtzee",
-  tic_tac_toe:         "Tic-Tac-Toe",
-  rock_paper_scissors: "Rock Paper Scissors",
-  guess_the_spy:       "Guess the Spy",
-  memory:              "Memory",
-  telephone_doodle:    "Telephone Doodle",
-  sketch_and_guess:    "Sketch & Guess",
-  liars_party:         "Liars Party",
-  fake_artist:         "Fake Artist",
-  other:               "Other",
-};
+  yahtzee: 'Yahtzee',
+  tic_tac_toe: 'Tic-Tac-Toe',
+  rock_paper_scissors: 'Rock Paper Scissors',
+  guess_the_spy: 'Guess the Spy',
+  memory: 'Memory',
+  telephone_doodle: 'Telephone Doodle',
+  sketch_and_guess: 'Sketch & Guess',
+  liars_party: 'Liars Party',
+  fake_artist: 'Fake Artist',
+  other: 'Other',
+}
 
 function AsciiBar({ pct }: { pct: number }) {
-  const width = 28;
-  const filled = Math.round((pct / 100) * width);
+  const width = 28
+  const filled = Math.round((pct / 100) * width)
   return (
     <span className="bk-gtbar-ascii">
-      {"█".repeat(filled)}
-      <span style={{ color: "var(--mute-2)" }}>{"░".repeat(width - filled)}</span>
+      {'█'.repeat(filled)}
+      <span style={{ color: 'var(--mute-2)' }}>{'░'.repeat(width - filled)}</span>
     </span>
-  );
+  )
 }
 
 export default async function DashboardPage() {
   const { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType } =
-    await getStats();
+    await getStats()
 
   return (
     <div className="bk-page">
@@ -48,7 +52,9 @@ export default async function DashboardPage() {
         <div className="bk-breadcrumb">cat ./status.log</div>
         <div className="bk-page-title-row">
           <div>
-            <h1 className="bk-page-title">dashboard<span className="bk-stat-cursor">▊</span></h1>
+            <h1 className="bk-page-title">
+              dashboard<span className="bk-stat-cursor">▊</span>
+            </h1>
             <p className="bk-page-sub">// live platform metrics — refreshes on load</p>
           </div>
         </div>
@@ -70,7 +76,7 @@ export default async function DashboardPage() {
         </Link>
 
         {/* Suspended */}
-        <Link href="/users" className={`bk-stat ${suspendedUsers > 0 ? "bk-stat--bad" : ""}`}>
+        <Link href="/users" className={`bk-stat ${suspendedUsers > 0 ? 'bk-stat--bad' : ''}`}>
           <span className="bk-stat-corner bk-stat-corner--tl">┌</span>
           <span className="bk-stat-corner bk-stat-corner--tr">┐</span>
           <span className="bk-stat-corner bk-stat-corner--bl">└</span>
@@ -80,7 +86,10 @@ export default async function DashboardPage() {
             <span className="bk-stat-label">SUSPENDED ACCOUNTS</span>
             {suspendedUsers > 0 && (
               <span className="bk-stat-alert">
-                <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>ACTION NEEDED<span className="bk-brk-r">]</span></span>
+                <span className="bk-brk bk-brk--bad">
+                  <span className="bk-brk-l">[</span>ACTION NEEDED
+                  <span className="bk-brk-r">]</span>
+                </span>
               </span>
             )}
           </div>
@@ -122,19 +131,19 @@ export default async function DashboardPage() {
         <div className="bk-section-head">
           <span className="bk-section-bracket">┌─</span>
           <span className="bk-section-title">games_by_type</span>
-          <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>
-            {"─".repeat(60)}
+          <span className="bk-section-fill" style={{ color: 'var(--mute-2)' }}>
+            {'─'.repeat(60)}
           </span>
           <span className="bk-section-bracket">─┐</span>
         </div>
         <div className="bk-section-body">
           <div className="bk-gtbar bk-gtbar--head">
-            <span style={{ color: "var(--mute)" }}>GAME TYPE</span>
-            <span style={{ color: "var(--mute)" }}>DISTRIBUTION</span>
-            <span style={{ color: "var(--mute)", textAlign: "right" }}>COUNT · PCT</span>
+            <span style={{ color: 'var(--mute)' }}>GAME TYPE</span>
+            <span style={{ color: 'var(--mute)' }}>DISTRIBUTION</span>
+            <span style={{ color: 'var(--mute)', textAlign: 'right' }}>COUNT · PCT</span>
           </div>
           {gamesByType.map((g) => {
-            const pct = totalGames > 0 ? Math.round((g._count.id / totalGames) * 100) : 0;
+            const pct = totalGames > 0 ? Math.round((g._count.id / totalGames) * 100) : 0
             return (
               <div key={g.gameType} className="bk-gtbar">
                 <span className="bk-gtbar-name">
@@ -143,26 +152,24 @@ export default async function DashboardPage() {
                 <div className="bk-gtbar-track">
                   <AsciiBar pct={pct} />
                 </div>
-                <span className="bk-gtbar-meta" style={{ color: "var(--mute)" }}>
-                  <span style={{ color: "var(--fg)" }}>{g._count.id.toLocaleString()}</span>
-                  {" · "}
-                  <span style={{ color: "var(--accent)" }}>{pct}%</span>
+                <span className="bk-gtbar-meta" style={{ color: 'var(--mute)' }}>
+                  <span style={{ color: 'var(--fg)' }}>{g._count.id.toLocaleString()}</span>
+                  {' · '}
+                  <span style={{ color: 'var(--accent)' }}>{pct}%</span>
                 </span>
               </div>
-            );
+            )
           })}
-          {gamesByType.length === 0 && (
-            <div className="bk-empty">no game data available</div>
-          )}
+          {gamesByType.length === 0 && <div className="bk-empty">no game data available</div>}
         </div>
         <div className="bk-section-foot">
           <span className="bk-section-bracket">└</span>
-          <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>
-            {"─".repeat(80)}
+          <span className="bk-section-fill" style={{ color: 'var(--mute-2)' }}>
+            {'─'.repeat(80)}
           </span>
           <span className="bk-section-bracket">┘</span>
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -19,7 +19,7 @@
   --fz-base:   14px;
   --fz-sm:     12px;
   --fz-xs:     11px;
-  --mono: "JetBrains Mono", "Fira Code", "IBM Plex Mono", ui-monospace,
+  --mono: var(--font-jetbrains), "Fira Code", "IBM Plex Mono", ui-monospace,
           SFMono-Regular, Menlo, Consolas, monospace;
 }
 
