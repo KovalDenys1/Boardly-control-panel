@@ -372,14 +372,34 @@ input, button, textarea, select { font: inherit; color: inherit; }
   background: rgba(0,0,0,0.3); color: var(--mute); font-size: var(--fz-xs);
 }
 
-/* ── Games filter bar ────────────────────────────────────────────────── */
-.bk-filter-bar   { display: flex; align-items: stretch; gap: 10px; margin-bottom: 12px; }
-.bk-filter-select {
-  background: var(--bg-2); border: 1px dashed var(--line-2);
-  color: var(--mute); font-family: var(--mono); font-size: var(--fz-xs);
-  padding: 6px 10px; outline: none; cursor: pointer; flex-shrink: 0;
+/* ── Games filter card (help-box style) ──────────────────────────────── */
+.bk-filter-card  { margin-bottom: 14px; }
+.bk-filter-head  {
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--fz-xs); color: var(--mute);
+  white-space: nowrap; overflow: hidden;
 }
-.bk-filter-select:focus { border-color: var(--accent); color: var(--fg); }
+.bk-filter-label { color: var(--accent); letter-spacing: 0.06em; flex-shrink: 0; }
+.bk-filter-fill  { flex: 1; overflow: hidden; color: var(--mute-2); }
+.bk-filter-count { color: var(--mute); flex-shrink: 0; }
+.bk-filter-corner { color: var(--mute); flex-shrink: 0; }
+.bk-filter-body  { padding: 10px 12px; border: 1px solid var(--line); border-top: none; display: flex; gap: 24px; flex-wrap: wrap; }
+.bk-filter-row   { display: flex; align-items: center; gap: 8px; }
+.bk-filter-key   { color: var(--mute); font-size: var(--fz-xs); letter-spacing: 0.06em; flex-shrink: 0; }
+.bk-filter-key::after { content: " ::"; color: var(--mute-2); }
+.bk-filter-select {
+  appearance: none; background: transparent; border: none; border-bottom: 1px dashed var(--line-2);
+  color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
+  padding: 2px 4px; outline: none; cursor: pointer;
+}
+.bk-filter-select:focus { border-bottom-color: var(--accent); color: var(--accent); }
+.bk-filter-input {
+  background: transparent; border: none; border-bottom: 1px dashed var(--line-2);
+  color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
+  padding: 2px 4px; outline: none; width: 180px;
+}
+.bk-filter-input:focus { border-bottom-color: var(--accent); }
+.bk-filter-input::placeholder { color: var(--mute-2); }
 
 /* ── User search bar ─────────────────────────────────────────────────── */
 .bk-search-bar   {

@@ -143,34 +143,42 @@ export function GamesTable({ games }: { games: GameRow[] }) {
 
   return (
     <>
-    <div className="bk-filter-bar">
-      <select
-        className="bk-filter-select"
-        value={gameTypeFilter}
-        onChange={(e) => setGameTypeFilter(e.target.value)}
-      >
-        <option value="all">all games</option>
-        {availableTypes.map((t) => (
-          <option key={t} value={t}>{gameTypeLabels[t] ?? t}</option>
-        ))}
-      </select>
-      <div className="bk-search-bar" style={{ marginBottom: 0, flex: 1 }}>
-        <span className="bk-search-prompt">$</span>
-        <input
-          type="text"
-          className="bk-search-input"
-          placeholder="search creator..."
-          value={creatorQuery}
-          onChange={(e) => setCreatorQuery(e.target.value)}
-          spellCheck={false}
-          autoComplete="off"
-        />
+    <div className="bk-filter-card">
+      <div className="bk-filter-head">
+        <span className="bk-filter-label">filter</span>
+        <span className="bk-filter-fill">{"─".repeat(80)}</span>
+        {isFiltered && (
+          <span className="bk-filter-count">{sorted.length} / {games.length}</span>
+        )}
+        <span className="bk-filter-corner">─┐</span>
       </div>
-      {isFiltered && (
-        <span className="bk-search-count" style={{ alignSelf: "center" }}>
-          {sorted.length} / {games.length}
-        </span>
-      )}
+      <div className="bk-filter-body">
+        <div className="bk-filter-row">
+          <span className="bk-filter-key">game</span>
+          <select
+            className="bk-filter-select"
+            value={gameTypeFilter}
+            onChange={(e) => setGameTypeFilter(e.target.value)}
+          >
+            <option value="all">all</option>
+            {availableTypes.map((t) => (
+              <option key={t} value={t}>{gameTypeLabels[t] ?? t}</option>
+            ))}
+          </select>
+        </div>
+        <div className="bk-filter-row">
+          <span className="bk-filter-key">creator</span>
+          <input
+            type="text"
+            className="bk-filter-input"
+            placeholder="username or email..."
+            value={creatorQuery}
+            onChange={(e) => setCreatorQuery(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+          />
+        </div>
+      </div>
     </div>
     <div className="bk-table-wrap">
     <table className="bk-table" style={{ minHeight: "320px" }}>
