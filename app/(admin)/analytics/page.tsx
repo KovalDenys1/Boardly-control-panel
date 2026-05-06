@@ -222,7 +222,7 @@ async function getAnalytics() {
              COUNT(*)::int AS count
       FROM "Users"
       WHERE "isGuest" = false AND "createdAt" >= ${thirtyDaysAgo}
-      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC')
+      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC'), TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD')
       ORDER BY DATE("createdAt" AT TIME ZONE 'UTC')
     `,
     prisma.$queryRaw<{ day: string; count: number }[]>`
@@ -230,7 +230,7 @@ async function getAnalytics() {
              COUNT(*)::int AS count
       FROM "Games"
       WHERE "createdAt" >= ${thirtyDaysAgo}
-      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC')
+      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC'), TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD')
       ORDER BY DATE("createdAt" AT TIME ZONE 'UTC')
     `,
     prisma.games.groupBy({ by: ["status"], _count: { id: true } }),
