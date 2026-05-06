@@ -1,18 +1,21 @@
 # Boardly Control Panel
 
-An admin control panel for the [Boardly](https://github.com/KovalDenys1/boardly) platform. Built as a separate Next.js application that connects to the same PostgreSQL database as Boardly, with its own authentication, API routes, and deployment.
+An admin control panel for the [Boardly](https://github.com/KovalDenys1/boardly) platform. Built as a separate Next.js application that connects to the same PostgreSQL database as Boardly, with its own authentication and deployment.
 
-Administrators can manage users, monitor platform activity, and handle security incidents — all from one interface.
+Live at **[admin.boardly.online](https://admin.boardly.online)**
 
 ---
 
 ## Features
 
-- **Admin-only authentication** — credentials login via NextAuth, restricted to users with `role: admin`
-- **Dashboard** — real-time platform stats (users, active games, suspended accounts)
-- **User management** — view all users, suspend and unsuspend accounts with full audit logging
-- **Games overview** — monitor all games by status, type, and player count
-- **Help page** — built-in documentation for new administrators
+- **Admin-only authentication** — credentials login via NextAuth v5, restricted to users with `role: admin`, with in-memory rate limiting (10 attempts / 15 min)
+- **Dashboard** — platform stats (total users, suspended accounts, active/total games) and 7-day activity charts for games and registrations
+- **User management** — paginated user list, suspend/unsuspend accounts, auto-expiry of time-limited bans, full audit trail
+- **Games overview** — paginated list (50/page) of all game sessions with status, type, creator, and player count; click any row for full session detail
+- **Game detail** — full session info: lobby config, player list with placements and scores, abandoned game warnings
+- **Monitor** — live view of active and waiting games, auto-refreshes every 30 seconds
+- **Audit log** — paginated history of all admin actions (suspend, unsuspend) with reason, timestamp, and acting admin
+- **Help page** — built-in documentation for administrators
 
 ---
 
@@ -24,7 +27,7 @@ Administrators can manage users, monitor platform activity, and handle security 
 │   (main platform)   │     │      Panel          │
 │                     │     │                     │
 │  nextjs · nextauth  │     │  nextjs · nextauth  │
-│  prisma · tailwind  │     │  prisma · tailwind  │
+│  prisma · tailwind  │     │  prisma (readonly)  │
 └──────────┬──────────┘     └──────────┬──────────┘
            │                           │
            └─────────────┬─────────────┘
@@ -41,16 +44,15 @@ One database, two separate services. The control panel has its own auth and is d
 
 ## Tech Stack
 
-| Technology | Why |
-|------------|-----|
-| Next.js 16 (App Router) | Combines frontend and backend in one project |
-| TypeScript | Type safety, catches errors at compile time |
-| Prisma ORM | Type-safe database queries, automatic SQL injection protection |
-| PostgreSQL (Supabase) | Same database as Boardly — no data duplication needed |
-| NextAuth v5 | Industry-standard auth — handles sessions, CSRF protection, and security |
-| bcryptjs | One-way password hashing — passwords can't be reversed even if the database leaks |
-| Tailwind CSS | Fast to build with, consistent design |
-| Vercel | One-click deploy from Git, automatic HTTPS, scales on demand |
+| Technology | Version | Role |
+|------------|---------|------|
+| Next.js App Router | 16.2.4 | Framework — frontend + server actions |
+| TypeScript | 5 | Type safety |
+| Prisma ORM | 6.19.3 | Type-safe database queries |
+| PostgreSQL (Supabase) | — | Shared database with Boardly |
+| NextAuth | v5 beta | Auth — JWT sessions, CSRF protection |
+| bcryptjs | 2.4.3 | Password verification (bcrypt) |
+| Vercel | — | Hosting, automatic HTTPS, custom domain |
 
 ---
 
@@ -58,9 +60,9 @@ One database, two separate services. The control panel has its own auth and is d
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm
-- Access to the Boardly Supabase database
+- Node.js 20+
+- pnpm 10+
+- Access to the Boardly Supabase database (read + write on admin tables)
 
 ### Setup
 
@@ -73,14 +75,14 @@ pnpm install
 Create `.env.local`:
 
 ```env
-DATABASE_URL="postgresql://..."      # Supabase pooler URL (port 6543)
-DIRECT_URL="postgresql://..."        # Supabase direct URL (port 5432)
-AUTH_SECRET="..."                    # Generate: openssl rand -base64 32
+DATABASE_URL="postgresql://..."      # Supabase pooler URL (port 6543, for queries)
+DIRECT_URL="postgresql://..."        # Supabase direct URL (port 5432, for migrations)
+AUTH_SECRET="..."                    # openssl rand -base64 32
 AUTH_URL="http://localhost:3000"
 ```
 
 ```bash
-pnpm db:generate
+pnpm db:generate   # generate Prisma client
 pnpm dev
 ```
 
@@ -90,27 +92,32 @@ Open [http://localhost:3000](http://localhost:3000) and log in with an admin acc
 
 ## Security
 
-- All routes are protected by middleware — unauthenticated users are redirected to `/login`
-- API routes verify the session independently of middleware
-- Every admin action (suspend/unsuspend) is logged in `AdminAuditLogs` with timestamp, admin ID, and target
-- Passwords are never stored in plain text — bcrypt hashing with salt
-- Environment variables are never committed to Git
+- All routes behind middleware — unauthenticated requests redirect to `/login`
+- Server actions re-verify the session and check `role === "admin"` independently of middleware
+- Every suspend/unsuspend action is written to `AdminAuditLogs` with admin ID, target user ID, reason, and timestamp
+- Passwords verified with bcrypt — never stored or logged in plain text
+- In-memory rate limiter blocks login after 10 failed attempts per email per 15-minute window
+- Environment variables never committed to Git; secrets configured in Vercel dashboard
 
 ---
 
 ## Deployment
 
-The app is deployed on Vercel. Environment variables are configured in the Vercel dashboard.
+Deployed on Vercel at `admin.boardly.online` (A record → `76.76.21.21`).
 
-```bash
-vercel --prod
-```
+**Required environment variables in Vercel:**
 
-**Environment variables to set in Vercel:**
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `AUTH_SECRET`
-- `AUTH_URL`
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | Supabase pooler connection string |
+| `DIRECT_URL` | Supabase direct connection string |
+| `AUTH_SECRET` | Random 32-byte base64 secret |
+| `AUTH_URL` | `https://admin.boardly.online` |
+
+**Notes:**
+- `pnpm.onlyBuiltDependencies` in `package.json` allows pnpm v10 to run Prisma's engine download scripts during install
+- `binaryTargets = ["native", "rhel-openssl-3.0.x"]` in `schema.prisma` ensures the Linux engine binary is generated
+- `outputFileTracingIncludes` in `next.config.ts` forces Next.js to bundle the `.node` engine file into the deployment
 
 ---
 
