@@ -49,15 +49,15 @@ export default function HelpPage() {
           </p>
         </SectionBox>
 
-        <SectionBox code="man.02" title="Dashboard — what the numbers mean">
+        <SectionBox code="man.02" title="Dashboard">
           <ul className="bk-help-ul">
             <li><span style={{ color: "var(--fg-strong)" }}>REGISTERED USERS</span> — registered accounts, guests excluded</li>
             <li><span style={{ color: "var(--bad)" }}>SUSPENDED ACCOUNTS</span> — accounts currently banned</li>
-            <li><span style={{ color: "var(--accent)" }}>ACTIVE GAMES</span> — game sessions currently in progress</li>
+            <li><span style={{ color: "var(--accent)" }}>ACTIVE GAMES</span> — sessions currently in progress or waiting</li>
             <li><span style={{ color: "var(--fg-strong)" }}>TOTAL GAMES</span> — all sessions ever created</li>
           </ul>
           <p>
-            Charts show activity for the last 7 days and a breakdown by game type.
+            Charts show registrations and game activity for the last 7 days, plus a breakdown by game type.
             All figures are fetched live from the database.
           </p>
         </SectionBox>
@@ -74,12 +74,12 @@ export default function HelpPage() {
             <li>Click any <span style={{ color: "var(--fg-strong)" }}>row</span> to open the detail page.</li>
           </ul>
           <p>
-            Pagination controls: <span style={{ color: "var(--accent)" }}>[«]</span> first · <span style={{ color: "var(--accent)" }}>[←]</span> prev ·
-            type a page number and press Enter · <span style={{ color: "var(--accent)" }}>[→]</span> next · <span style={{ color: "var(--accent)" }}>[»]</span> last.
+            Pagination: <span style={{ color: "var(--accent)" }}>[«]</span> first · <span style={{ color: "var(--accent)" }}>[←]</span> prev ·
+            type a page number in the <span style={{ color: "var(--accent)" }}>[n/N]</span> badge and press Enter · <span style={{ color: "var(--accent)" }}>[→]</span> next · <span style={{ color: "var(--accent)" }}>[»]</span> last.
           </p>
         </SectionBox>
 
-        <SectionBox code="man.04" title="User management — suspend and restore">
+        <SectionBox code="man.04" title="Users — suspend and restore">
           <p>
             Click any user row to open their detail page with full profile, game history, and moderation controls.
           </p>
@@ -98,7 +98,7 @@ export default function HelpPage() {
           </div>
         </SectionBox>
 
-        <SectionBox code="man.05" title="Game statuses">
+        <SectionBox code="man.05" title="Games — statuses and force-end">
           <ul className="bk-help-ul">
             <li>
               <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>PLAYING<span className="bk-brk-r">]</span></span>
@@ -114,7 +114,7 @@ export default function HelpPage() {
             </li>
             <li>
               <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>ABANDONED<span className="bk-brk-r">]</span></span>
-              {" — "}players left before finishing
+              {" — "}players left before finishing or force-ended by admin
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>CANCELLED<span className="bk-brk-r">]</span></span>
@@ -122,9 +122,13 @@ export default function HelpPage() {
             </li>
           </ul>
           <p>
-            Player count on the games table excludes bots. Click a game row to see full session details
-            including all players, rounds, and duration.
+            On a game detail page, active sessions (<span style={{ color: "var(--accent)" }}>[PLAYING]</span> or <span style={{ color: "var(--mute)" }}>[WAITING]</span>)
+            show a <span style={{ color: "var(--bad)" }}>[FORCE END]</span> button. This marks the session as{" "}
+            <span style={{ color: "var(--bad)" }}>ABANDONED</span> immediately and records the action in the audit log.
           </p>
+          <div className="bk-help-sig">
+            note :: player count on the games table excludes bots
+          </div>
         </SectionBox>
 
         <SectionBox code="man.06" title="Monitor — live game sessions">
@@ -145,7 +149,7 @@ export default function HelpPage() {
             <span style={{ color: "var(--accent)" }}>audit</span> log with:
           </p>
           <ul className="bk-help-ul">
-            <li><span style={{ color: "var(--fg-strong)" }}>action</span> — what was done (e.g. <span style={{ color: "var(--bad)" }}>suspend.user</span>, <span style={{ color: "var(--accent)" }}>unsuspend.user</span>)</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>action</span> — what was done (e.g. <span style={{ color: "var(--bad)" }}>suspend.user</span>, <span style={{ color: "var(--accent)" }}>unsuspend.user</span>, <span style={{ color: "var(--bad)" }}>force.end.game</span>)</li>
             <li><span style={{ color: "var(--fg-strong)" }}>admin</span> — which admin performed the action</li>
             <li><span style={{ color: "var(--fg-strong)" }}>target</span> — the affected user or resource (clickable)</li>
             <li><span style={{ color: "var(--fg-strong)" }}>details</span> — reason provided at the time of action</li>
@@ -156,7 +160,28 @@ export default function HelpPage() {
           </div>
         </SectionBox>
 
-        <SectionBox code="man.08" title="Feedback — user-submitted reports">
+        <SectionBox code="man.08" title="Analytics — platform metrics">
+          <p>
+            The <span style={{ color: "var(--accent)" }}>analytics</span> page shows aggregated product metrics across rolling time windows.
+          </p>
+          <ul className="bk-help-ul">
+            <li><span style={{ color: "var(--fg-strong)" }}>TOTAL USERS</span> — all-time registered (non-guest) accounts</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>WEEKLY ACTIVE</span> — users who were active in the last 7 days</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>TOTAL GAMES</span> — all sessions across all statuses</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>COMPLETION RATE</span> — finished / (finished + abandoned)</li>
+          </ul>
+          <ul className="bk-help-ul">
+            <li>Registrations and games charts cover the last <span style={{ color: "var(--accent)" }}>30 days</span>, one bar per day</li>
+            <li>Hourly activity chart covers the last <span style={{ color: "var(--accent)" }}>7 days</span>, bucketed by UTC hour</li>
+            <li>Game type stats show all-time finished sessions, sorted by count</li>
+            <li>Status distribution shows the stacked breakdown of all sessions ever created</li>
+          </ul>
+          <div className="bk-help-sig">
+            note :: hover any bar or segment for the exact count
+          </div>
+        </SectionBox>
+
+        <SectionBox code="man.09" title="Feedback — user-submitted reports">
           <p>
             The <span style={{ color: "var(--accent)" }}>feedback</span> page collects all messages submitted by users from the Boardly app.
           </p>
@@ -171,7 +196,7 @@ export default function HelpPage() {
           </div>
         </SectionBox>
 
-        <SectionBox code="man.09" title="Contact and support">
+        <SectionBox code="man.10" title="Contact and support">
           <p>
             Found a bug or have a question?
             Reach out to the developer:

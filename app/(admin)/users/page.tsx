@@ -165,7 +165,7 @@ export default async function UsersPage({
           currentDir={currentDir}
           pageOffset={(page - 1) * PAGE_SIZE}
         />
-        <div className="bk-table-foot" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--mute)" }}>
+        <div className="bk-table-foot bk-table-foot-nav">
           <span>{filteredTotal} records · {total} total · all actions logged to audit trail</span>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {page > 1 && (

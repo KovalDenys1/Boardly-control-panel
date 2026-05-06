@@ -335,6 +335,10 @@ input, button, textarea, select { font: inherit; color: inherit; }
   padding: 8px 14px; border-top: 1px solid var(--line);
   font-size: var(--fz-xs); background: rgba(0,0,0,0.25);
 }
+.bk-table-foot-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; flex-wrap: wrap; color: var(--mute);
+}
 .bk-empty { padding: 36px; text-align: center; color: var(--mute); }
 .bk-empty-cell { padding: 56px 0; text-align: center; color: var(--mute); font-size: var(--fz-xs); letter-spacing: 0.08em; font-family: var(--mono); }
 
@@ -542,6 +546,12 @@ input, button, textarea, select { font: inherit; color: inherit; }
   }
   .bk-page-head {
     margin-bottom: 20px;
+  }
+  .bk-filter-bar {
+    flex-wrap: wrap;
+  }
+  .bk-table-foot-nav {
+    flex-direction: column; align-items: flex-start; gap: 10px;
   }
 }
 

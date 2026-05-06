@@ -148,7 +148,7 @@ export default async function FeedbackPage({
         </table>
       </div>
 
-      <div className="bk-table-foot" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--mute)" }}>
+      <div className="bk-table-foot bk-table-foot-nav">
         <span>{total} records{type ? ` · filtered by "${type}"` : ""}</span>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {page > 1 && (

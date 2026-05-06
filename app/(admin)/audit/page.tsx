@@ -130,7 +130,7 @@ export default async function AuditPage({
         {logs.length === 0 && (
           <div className="bk-empty">no audit records found</div>
         )}
-        <div className="bk-table-foot" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="bk-table-foot bk-table-foot-nav">
           <span style={{ color: "var(--mute)" }}>
             page {page} of {totalPages} · {total} total entries
           </span>
