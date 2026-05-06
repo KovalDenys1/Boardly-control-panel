@@ -553,6 +553,17 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .bk-table-foot-nav {
     flex-direction: column; align-items: flex-start; gap: 10px;
   }
+  /* analytics */
+  .bk-breadcrumb {
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .bk-kpi-grid { grid-template-columns: 1fr; }
+  .bk-an-row--2col { grid-template-columns: 1fr; }
+  .bk-hbrow { grid-template-columns: 1fr; gap: 4px; }
+  .bk-hbrow-meta { text-align: left; }
+  .bk-hbrow-track { margin-bottom: 2px; }
+  .bk-statusbk-legend { grid-template-columns: 1fr; }
+  .bk-chart-yaxis, .bk-chart-plot { max-height: 110px; }
 }
 
 /* ── Tablet (768–1023px) ─────────────────────────────────────────────── */

@@ -288,14 +288,7 @@ export default async function AnalyticsPage() {
   return (
     <div className="bk-page">
       <header className="bk-page-head">
-        <div className="bk-breadcrumb">
-          <span className="bk-mute">~/admin</span>
-          <span className="bk-mute">/</span>
-          <span className="bk-fg">analytics</span>
-          <span className="bk-mute"> $ </span>
-          <span className="bk-mute">SELECT</span>
-          <span className="bk-fg"> * FROM events WHERE ts &gt; now() - interval &apos;30d&apos;</span>
-        </div>
+        <div className="bk-breadcrumb">cat ./analytics.log</div>
         <div className="bk-page-title-row">
           <h1 className="bk-page-title">Analytics<span className="bk-cursor">▊</span></h1>
           <div className="bk-pill-row">
