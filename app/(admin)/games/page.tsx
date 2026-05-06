@@ -63,7 +63,7 @@ export default async function GamesPage({
           <div>
             <h1 className="bk-page-title">games<span className="bk-stat-cursor">▊</span></h1>
             <p className="bk-page-sub">
-              // {total} sessions · page {page} of {totalPages} · click row for details
+              {"// "}{total}{" sessions · page "}{page}{" of "}{totalPages}{" · click row for details"}
             </p>
           </div>
           <div className="bk-pill-row">

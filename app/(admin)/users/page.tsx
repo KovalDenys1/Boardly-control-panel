@@ -95,7 +95,7 @@ export default async function UsersPage() {
           <div>
             <h1 className="bk-page-title">users<span className="bk-stat-cursor">▊</span></h1>
             <p className="bk-page-sub">
-              // {users.length} registered
+              {"// "}{users.length}{" registered"}
               {suspended > 0 && (
                 <> · <span style={{ color: "var(--bad)" }}>{suspended} suspended</span></>
               )}

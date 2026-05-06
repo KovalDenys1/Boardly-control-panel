@@ -152,7 +152,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
               <span className="bk-stat-cursor">▊</span>
             </h1>
             <p className="bk-page-sub" style={{ fontFamily: "var(--mono)", letterSpacing: "0.02em" }}>
-              // {game.id}
+              {"// "}{game.id}
             </p>
           </div>
           {statusBadge(game.status)}
