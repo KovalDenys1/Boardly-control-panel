@@ -51,6 +51,18 @@ function formatDate(date: Date | null) {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function formatDateTime(date: Date | null) {
+  if (!date) return "—";
+  const d = date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const t = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return (
+    <span>
+      <span className="text-zinc-300">{t}</span>
+      <span className="text-zinc-600 ml-1">{d}</span>
+    </span>
+  );
+}
+
 export default async function GamesPage() {
   const games = await getGames();
 
@@ -104,8 +116,8 @@ export default async function GamesPage() {
                 </td>
                 <td className="px-5 py-3.5 text-zinc-400"><Link href={`/games/${game.id}`} className="block">{game.Players.length}</Link></td>
                 <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.createdAt)}</Link></td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.startedAt)}</Link></td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.endedAt)}</Link></td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDateTime(game.startedAt)}</Link></td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDateTime(game.endedAt)}</Link></td>
                 <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDuration(game.durationSeconds)}</Link></td>
               </tr>
             ))}
