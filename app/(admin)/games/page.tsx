@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 async function getGames() {
   return prisma.games.findMany({
@@ -12,7 +13,7 @@ async function getGames() {
       startedAt: true,
       endedAt: true,
       durationSeconds: true,
-      Players: { select: { id: true } },
+      Players: { where: { Users: { Bots: null } }, select: { id: true } },
     },
   });
 }
@@ -88,20 +89,24 @@ export default async function GamesPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800/50">
             {games.map((game) => (
-              <tr key={game.id} className="hover:bg-zinc-800/30 transition-colors">
+              <tr key={game.id} className="hover:bg-zinc-800/30 transition-colors cursor-pointer group">
                 <td className="px-5 py-3.5">
-                  <span className="text-white">{gameTypeLabels[game.gameType] ?? game.gameType}</span>
+                  <Link href={`/games/${game.id}`} className="text-white group-hover:text-zinc-300 transition-colors">
+                    {gameTypeLabels[game.gameType] ?? game.gameType}
+                  </Link>
                 </td>
                 <td className="px-5 py-3.5">
-                  <span className={`text-xs border px-2 py-0.5 rounded-full ${statusStyles[game.status] ?? statusStyles.finished}`}>
-                    {game.status}
-                  </span>
+                  <Link href={`/games/${game.id}`} className="block">
+                    <span className={`text-xs border px-2 py-0.5 rounded-full ${statusStyles[game.status] ?? statusStyles.finished}`}>
+                      {game.status}
+                    </span>
+                  </Link>
                 </td>
-                <td className="px-5 py-3.5 text-zinc-400">{game.Players.length}</td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">{formatDate(game.createdAt)}</td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">{formatDate(game.startedAt)}</td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">{formatDate(game.endedAt)}</td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">{formatDuration(game.durationSeconds)}</td>
+                <td className="px-5 py-3.5 text-zinc-400"><Link href={`/games/${game.id}`} className="block">{game.Players.length}</Link></td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.createdAt)}</Link></td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.startedAt)}</Link></td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.endedAt)}</Link></td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDuration(game.durationSeconds)}</Link></td>
               </tr>
             ))}
           </tbody>
