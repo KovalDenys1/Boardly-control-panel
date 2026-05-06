@@ -103,6 +103,7 @@ export function UsersTable({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         spellCheck={false}
+        autoComplete="off"
       />
       {query && (
         <span className="bk-search-count">
@@ -110,7 +111,8 @@ export function UsersTable({
         </span>
       )}
     </div>
-    <table className="bk-table">
+    <div className="bk-table-wrap">
+    <table className="bk-table" style={{ minHeight: "320px" }}>
       <thead>
         <tr>
           <th className="bk-th-num">#</th>
@@ -220,6 +222,7 @@ export function UsersTable({
         ))}
       </tbody>
     </table>
+    </div>
     </>
   );
 }

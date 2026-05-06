@@ -9,6 +9,11 @@ async function getGames() {
       id: true, gameType: true, status: true,
       createdAt: true, startedAt: true, endedAt: true, durationSeconds: true,
       Players: { where: { Users: { Bots: null } }, select: { id: true } },
+      Lobbies: {
+        select: {
+          Users: { select: { username: true, email: true } },
+        },
+      },
     },
   });
 }
@@ -25,6 +30,8 @@ export default async function GamesPage() {
     endedAt: g.endedAt?.toISOString() ?? null,
     durationSeconds: g.durationSeconds,
     playerCount: g.Players.length,
+    creatorUsername: g.Lobbies?.Users?.username ?? null,
+    creatorEmail: g.Lobbies?.Users?.email ?? null,
   }));
 
   const counts = {
@@ -59,7 +66,7 @@ export default async function GamesPage() {
         </div>
       </div>
 
-      <div className="bk-table-wrap">
+      <div>
         <GamesTable games={games} />
         {games.length === 0 && <div className="bk-empty">no games found</div>}
         <div className="bk-table-foot" style={{ color: "var(--mute)" }}>

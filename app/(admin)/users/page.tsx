@@ -106,7 +106,7 @@ export default async function UsersPage() {
         </div>
       </div>
 
-      <div className="bk-table-wrap">
+      <div>
         <UsersTable users={users} handleSuspend={handleSuspend} />
         {users.length === 0 && <div className="bk-empty">no users found</div>}
         <div className="bk-table-foot" style={{ color: "var(--mute)" }}>

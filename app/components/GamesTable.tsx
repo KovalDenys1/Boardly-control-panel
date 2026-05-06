@@ -12,6 +12,8 @@ export type GameRow = {
   endedAt: string | null;
   durationSeconds: number | null;
   playerCount: number;
+  creatorUsername: string | null;
+  creatorEmail: string | null;
 };
 
 const gameTypeLabels: Record<string, string> = {
@@ -22,7 +24,7 @@ const gameTypeLabels: Record<string, string> = {
   fake_artist: "Fake Artist", other: "Other",
 };
 
-type SortKey = "gameType" | "status" | "playerCount" | "createdAt" | "startedAt" | "endedAt" | "durationSeconds";
+type SortKey = "status" | "playerCount" | "createdAt" | "startedAt" | "endedAt" | "durationSeconds";
 type SortDir = "asc" | "desc";
 
 function statusBadge(status: string) {
@@ -72,7 +74,6 @@ function numVal(v: string | null): number {
 function compare(a: GameRow, b: GameRow, key: SortKey, dir: SortDir): number {
   let va: string | number, vb: string | number;
   switch (key) {
-    case "gameType":        va = (gameTypeLabels[a.gameType] ?? a.gameType).toLowerCase(); vb = (gameTypeLabels[b.gameType] ?? b.gameType).toLowerCase(); break;
     case "status":          va = a.status; vb = b.status; break;
     case "playerCount":     va = a.playerCount; vb = b.playerCount; break;
     case "createdAt":       va = numVal(a.createdAt); vb = numVal(b.createdAt); break;
@@ -88,15 +89,39 @@ function compare(a: GameRow, b: GameRow, key: SortKey, dir: SortDir): number {
 export function GamesTable({ games }: { games: GameRow[] }) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [gameTypeFilter, setGameTypeFilter] = useState("all");
+  const [creatorQuery, setCreatorQuery] = useState("");
+
+  const availableTypes = useMemo(() => {
+    const types = new Set(games.map((g) => g.gameType));
+    return Array.from(types).sort((a, b) =>
+      (gameTypeLabels[a] ?? a).localeCompare(gameTypeLabels[b] ?? b),
+    );
+  }, [games]);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
   }
 
+  const filtered = useMemo(() => {
+    let result = games;
+    if (gameTypeFilter !== "all") {
+      result = result.filter((g) => g.gameType === gameTypeFilter);
+    }
+    const q = creatorQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter((g) =>
+        (g.creatorUsername ?? "").toLowerCase().includes(q) ||
+        (g.creatorEmail ?? "").toLowerCase().includes(q),
+      );
+    }
+    return result;
+  }, [games, gameTypeFilter, creatorQuery]);
+
   const sorted = useMemo(
-    () => sortKey ? [...games].sort((a, b) => compare(a, b, sortKey, sortDir)) : games,
-    [games, sortKey, sortDir],
+    () => sortKey ? [...filtered].sort((a, b) => compare(a, b, sortKey, sortDir)) : filtered,
+    [filtered, sortKey, sortDir],
   );
 
   function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string }) {
@@ -114,12 +139,46 @@ export function GamesTable({ games }: { games: GameRow[] }) {
     );
   }
 
+  const isFiltered = gameTypeFilter !== "all" || creatorQuery.trim() !== "";
+
   return (
-    <table className="bk-table">
+    <>
+    <div className="bk-filter-bar">
+      <select
+        className="bk-filter-select"
+        value={gameTypeFilter}
+        onChange={(e) => setGameTypeFilter(e.target.value)}
+      >
+        <option value="all">all games</option>
+        {availableTypes.map((t) => (
+          <option key={t} value={t}>{gameTypeLabels[t] ?? t}</option>
+        ))}
+      </select>
+      <div className="bk-search-bar" style={{ marginBottom: 0, flex: 1 }}>
+        <span className="bk-search-prompt">$</span>
+        <input
+          type="text"
+          className="bk-search-input"
+          placeholder="search creator..."
+          value={creatorQuery}
+          onChange={(e) => setCreatorQuery(e.target.value)}
+          spellCheck={false}
+          autoComplete="off"
+        />
+      </div>
+      {isFiltered && (
+        <span className="bk-search-count" style={{ alignSelf: "center" }}>
+          {sorted.length} / {games.length}
+        </span>
+      )}
+    </div>
+    <div className="bk-table-wrap">
+    <table className="bk-table" style={{ minHeight: "320px" }}>
       <thead>
         <tr>
           <th className="bk-th-num">#</th>
-          <Th col="gameType">GAME TYPE</Th>
+          <th>GAME TYPE</th>
+          <th>CREATOR</th>
           <Th col="status">STATUS</Th>
           <Th col="playerCount">PLAYERS</Th>
           <Th col="createdAt">CREATED</Th>
@@ -137,6 +196,18 @@ export function GamesTable({ games }: { games: GameRow[] }) {
                 {gameTypeLabels[game.gameType] ?? game.gameType}
               </Link>
             </td>
+            <td>
+              <Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>
+                {game.creatorUsername ? (
+                  <>
+                    <div className="bk-cell-user-name">{game.creatorUsername}</div>
+                    <div className="bk-cell-user-mail">{game.creatorEmail ?? ""}</div>
+                  </>
+                ) : (
+                  <span style={{ color: "var(--mute-2)" }}>—</span>
+                )}
+              </Link>
+            </td>
             <td><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{statusBadge(game.status)}</Link></td>
             <td style={{ color: "var(--fg)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{game.playerCount}</Link></td>
             <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDate(game.createdAt)}</Link></td>
@@ -147,5 +218,7 @@ export function GamesTable({ games }: { games: GameRow[] }) {
         ))}
       </tbody>
     </table>
+    </div>
+    </>
   );
 }
