@@ -311,8 +311,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-gtbar-meta  { font-size: var(--fz-xs); text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ── Tables ──────────────────────────────────────────────────────────── */
-.bk-table-wrap { border: 1px solid var(--line); background: var(--bg-2); overflow: hidden; }
-.bk-table { width: 100%; border-collapse: collapse; font-size: var(--fz-sm); }
+.bk-table-wrap { border: 1px solid var(--line); background: var(--bg-2); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.bk-table { width: 100%; border-collapse: collapse; font-size: var(--fz-sm); min-width: 640px; }
 .bk-table thead th {
   text-align: left; font-weight: 600; font-size: var(--fz-xs); letter-spacing: 0.14em;
   color: var(--mute); padding: 10px 14px; border-bottom: 1px solid var(--line);
@@ -335,6 +335,13 @@ input, button, textarea, select { font: inherit; color: inherit; }
   font-size: var(--fz-xs); background: rgba(0,0,0,0.25);
 }
 .bk-empty { padding: 36px; text-align: center; color: var(--mute); }
+
+/* ── Sortable table headers ──────────────────────────────────────────── */
+.bk-th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.bk-th-sort:hover { color: var(--fg-strong); }
+.bk-th-sort--active { color: var(--accent); }
+.bk-sort-icon { margin-left: 5px; color: var(--mute-2); font-size: 9px; vertical-align: middle; }
+.bk-sort-icon--active { color: var(--accent); }
 
 /* ── Help page ───────────────────────────────────────────────────────── */
 .bk-help-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -364,4 +371,110 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-help-sig {
   margin: 14px 0 0; padding: 10px 12px; border: 1px dashed var(--line-2);
   background: rgba(0,0,0,0.3); color: var(--mute); font-size: var(--fz-xs);
+}
+
+/* ── Mobile top bar ──────────────────────────────────────────────────── */
+.bk-topbar {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 10px 16px; flex-shrink: 0;
+  background: var(--bg-2); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+}
+
+/* ── Backdrop overlay ────────────────────────────────────────────────── */
+.bk-overlay {
+  position: fixed; inset: 0; z-index: 99;
+  background: rgba(0,0,0,0.6);
+  display: none;
+}
+.bk-overlay--open { display: block; }
+
+/* ── Sidebar close button ────────────────────────────────────────────── */
+.bk-sb-close {
+  display: none;
+  appearance: none; background: transparent; border: 0;
+  color: var(--mute); cursor: pointer; padding: 2px 4px;
+  font-size: var(--fz-sm); line-height: 1; margin-left: auto;
+  transition: color 0.12s;
+}
+.bk-sb-close:hover { color: var(--bad); }
+
+/* ── Menu button ─────────────────────────────────────────────────────── */
+.bk-menu-btn {
+  appearance: none; background: transparent;
+  border: 1px dashed var(--line-2); color: var(--fg);
+  cursor: pointer; padding: 6px 10px;
+  font-size: var(--fz-xs); letter-spacing: 0.1em;
+  display: flex; align-items: baseline; gap: 4px;
+  font-family: var(--mono);
+  transition: border-color 0.12s, color 0.12s;
+}
+.bk-menu-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Mobile (<768px) ─────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .bk-shell {
+    display: flex; flex-direction: column;
+  }
+  .bk-topbar {
+    display: flex;
+  }
+  .bk-sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 240px; z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+  }
+  .bk-sidebar--open {
+    transform: translateX(0);
+  }
+  .bk-sb-close {
+    display: block;
+  }
+  .bk-main {
+    padding: 16px 16px 40px;
+    height: auto; flex: 1; min-height: 0; overflow-y: auto;
+  }
+  .bk-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .bk-stat-value {
+    font-size: 36px;
+  }
+  .bk-help-grid {
+    grid-template-columns: 1fr;
+  }
+  .bk-help-card:nth-child(3),
+  .bk-help-card:nth-child(5) {
+    grid-column: span 1;
+  }
+  .bk-page-title {
+    font-size: 22px;
+  }
+  .bk-page-title-row {
+    flex-direction: column; align-items: flex-start;
+  }
+  .bk-gtbar {
+    grid-template-columns: 90px 1fr 72px; gap: 8px;
+  }
+  .bk-table-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .bk-page-head {
+    margin-bottom: 20px;
+  }
+}
+
+/* ── Tablet (768–1023px) ─────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .bk-main {
+    padding: 20px 24px 48px;
+  }
+  .bk-gtbar {
+    grid-template-columns: 120px 1fr 160px;
+  }
+  .bk-table-wrap {
+    overflow-x: auto;
+  }
 }

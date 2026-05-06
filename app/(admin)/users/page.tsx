@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { UsersTable } from "@/app/components/UsersTable";
 
 async function getUsers() {
   return prisma.users.findMany({
@@ -22,14 +23,16 @@ async function toggleSuspend(userId: string, suspend: boolean, adminId: string) 
   });
 }
 
-function fmt(d: Date) {
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export default async function UsersPage() {
   const session = await auth();
   const adminId = session!.user!.id!;
-  const users   = await getUsers();
+  const raw = await getUsers();
+
+  const users = raw.map((u) => ({
+    ...u,
+    createdAt: u.createdAt.toISOString(),
+    lastActiveAt: u.lastActiveAt.toISOString(),
+  }));
 
   async function handleSuspend(formData: FormData) {
     "use server";
@@ -71,71 +74,8 @@ export default async function UsersPage() {
       </div>
 
       <div className="bk-table-wrap">
-        <table className="bk-table">
-          <thead>
-            <tr>
-              <th className="bk-th-num">#</th>
-              <th>USER</th>
-              <th>ROLE</th>
-              <th>JOINED</th>
-              <th>LAST ACTIVE</th>
-              <th>STATUS</th>
-              <th className="bk-th-right">ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user, i) => (
-              <tr key={user.id}>
-                <td className="bk-td-num" style={{ color: "var(--mute)" }}>{String(i + 1).padStart(2, "0")}</td>
-                <td>
-                  <div className="bk-cell-user-name">{user.username ?? "—"}</div>
-                  <div className="bk-cell-user-mail">{user.email}</div>
-                </td>
-                <td>
-                  {user.role === "admin" ? (
-                    <span className="bk-brk bk-brk--accent">
-                      <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
-                    </span>
-                  ) : (
-                    <span className="bk-mute">user</span>
-                  )}
-                </td>
-                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.createdAt)}</td>
-                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.lastActiveAt)}</td>
-                <td>
-                  {user.suspended ? (
-                    <span className="bk-brk bk-brk--bad">
-                      <span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span>
-                    </span>
-                  ) : (
-                    <span className="bk-brk bk-brk--ok">
-                      <span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span>
-                    </span>
-                  )}
-                </td>
-                <td className="bk-td-right">
-                  {user.role !== "admin" && (
-                    <form action={handleSuspend}>
-                      <input type="hidden" name="userId" value={user.id} />
-                      <input type="hidden" name="action" value={user.suspended ? "unsuspend" : "suspend"} />
-                      <button
-                        type="submit"
-                        className={`bk-btn ${user.suspended ? "bk-btn--neutral" : "bk-btn--bad"}`}
-                      >
-                        <span className="bk-btn-brk">[</span>
-                        <span className="bk-btn-label">{user.suspended ? "UNSUSPEND" : "SUSPEND"}</span>
-                        <span className="bk-btn-brk">]</span>
-                      </button>
-                    </form>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {users.length === 0 && (
-          <div className="bk-empty">no users found</div>
-        )}
+        <UsersTable users={users} handleSuspend={handleSuspend} />
+        {users.length === 0 && <div className="bk-empty">no users found</div>}
         <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
           {users.length} records · all actions logged to audit trail
         </div>

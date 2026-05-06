@@ -57,7 +57,7 @@ export default function LoginPage() {
 
           <div className="bk-login-line">
             <span style={{ color: "var(--mute)" }}>system  </span>
-            <span style={{ color: "var(--fg)" }}>Boardly Control Panel v2.6</span>
+            <span style={{ color: "var(--fg)" }}>Boardly Control Panel v1.0</span>
           </div>
           <div className="bk-login-line">
             <span style={{ color: "var(--mute)" }}>access  </span>

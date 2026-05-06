@@ -12,8 +12,8 @@ function SectionBox({
       <div className="bk-help-head">
         <span className="bk-help-code">{code}</span>
         <span className="bk-help-title">{title}</span>
-        <span style={{ flex: 1, overflow: "hidden", color: "var(--mute-2)" }}>{fill.repeat(40)}</span>
-        <span style={{ color: "var(--mute)" }}>─┐</span>
+        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", color: "var(--mute-2)" }}>{fill.repeat(80)}</span>
+        <span style={{ color: "var(--mute)", flexShrink: 0 }}>─┐</span>
       </div>
       <div className="bk-help-body">{children}</div>
       <div className="bk-help-head">
@@ -32,7 +32,7 @@ export default function HelpPage() {
         <div className="bk-breadcrumb">man ./hjelp</div>
         <div>
           <h1 className="bk-page-title">hjelp<span className="bk-stat-cursor">▊</span></h1>
-          <p className="bk-page-sub">// administratordokumentasjon — Boardly Control Panel v2.6</p>
+          <p className="bk-page-sub">// administratordokumentasjon — Boardly Control Panel v1.0</p>
         </div>
       </div>
 
