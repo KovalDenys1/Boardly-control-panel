@@ -3,7 +3,15 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { UsersTable } from "@/app/components/UsersTable";
 
+async function liftExpiredBans() {
+  await prisma.users.updateMany({
+    where: { suspended: true, banExpiresAt: { lt: new Date() } },
+    data: { suspended: false, banReason: null, banExpiresAt: null },
+  });
+}
+
 async function getUsers() {
+  await liftExpiredBans();
   return prisma.users.findMany({
     where: { isGuest: false },
     select: {
@@ -54,6 +62,8 @@ export default async function UsersPage() {
 
   async function handleSuspend(formData: FormData) {
     "use server";
+    const session = await auth();
+    if (session?.user && (session.user as { role?: string }).role !== "admin") return;
     const userId = formData.get("userId") as string;
     const action = formData.get("action") as string;
     const banReason = formData.get("banReason") as string | null;
