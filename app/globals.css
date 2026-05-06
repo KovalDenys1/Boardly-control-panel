@@ -699,6 +699,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
   transition: background 0.12s, border-color 0.12s;
 }
 .bk-vbar:hover .bk-vbar-fill { background: rgba(var(--accent-rgb), 0.35); }
+.bk-vbar--ok     .bk-vbar-fill { background: rgba(var(--accent-rgb), 0.18); border-top-color: var(--accent); }
 .bk-vbar--accent .bk-vbar-fill { background: rgba(var(--accent-rgb), 0.14); border-top-color: var(--accent); }
 .bk-vbar--bad    .bk-vbar-fill { background: rgba(var(--bad-rgb), 0.18); border-top-color: var(--bad); }
 .bk-vbar--mute   .bk-vbar-fill { background: rgba(255,255,255,0.04); border-top-color: var(--mute); }

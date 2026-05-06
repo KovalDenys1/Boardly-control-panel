@@ -50,18 +50,18 @@ function SectionFrame({ title, meta, children, foot }: {
   return (
     <section className="bk-section">
       <header className="bk-section-head">
-        <span className="bk-section-bracket">┌──</span>
+        <span className="bk-section-bracket">┌─</span>
         <span className="bk-section-title">{title}</span>
         {meta && <span className="bk-section-meta bk-mute">{meta}</span>}
-        <span className="bk-section-bracket bk-section-fill">─</span>
-        <span className="bk-section-bracket">──┐</span>
+        <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
+        <span className="bk-section-bracket">─┐</span>
       </header>
       <div className="bk-section-body">{children}</div>
       <footer className="bk-section-foot">
-        <span className="bk-section-bracket">└──</span>
+        <span className="bk-section-bracket">└</span>
         {foot && <span className="bk-mute">{foot}</span>}
-        <span className="bk-section-bracket bk-section-fill">─</span>
-        <span className="bk-section-bracket">──┘</span>
+        <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(80)}</span>
+        <span className="bk-section-bracket">┘</span>
       </footer>
     </section>
   );
@@ -384,37 +384,33 @@ export default async function AnalyticsPage() {
       </div>
 
       {/* Row 2: status breakdown */}
-      <div className="bk-an-row">
-        <SectionFrame
-          title="game_status_distribution.tsv"
-          meta={`${fmtNum(totalGames)} games`}
-          foot="> stacked horizontal bar · hover segments for details"
-        >
-          <StatusBreakdown counts={statusMap} />
-        </SectionFrame>
-      </div>
+      <SectionFrame
+        title="game_status_distribution.tsv"
+        meta={`${fmtNum(totalGames)} games`}
+        foot="> stacked horizontal bar · hover segments for details"
+      >
+        <StatusBreakdown counts={statusMap} />
+      </SectionFrame>
 
       {/* Row 3: hourly activity */}
-      <div className="bk-an-row">
-        <SectionFrame
-          title="hourly_activity.tsv"
-          meta={peakHour ? `7d · peak hour: ${String(peakHour.hour).padStart(2, "0")}:00 (${fmtNum(peakHour.count)})` : "7d"}
-          foot="> games created bucketed by hour-of-day, summed across last 7 days"
-        >
-          {hours.length === 0 ? (
-            <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
-          ) : (
-            <VBarChart
-              data={hours}
-              getX={(d) => (d as { hour: number }).hour}
-              getY={(d) => (d as { count: number }).count}
-              xLabel={(d) => ((d as { hour: number }).hour % 3 === 0) ? String((d as { hour: number }).hour).padStart(2, "0") : ""}
-              tone="accent"
-              height={140}
-            />
-          )}
-        </SectionFrame>
-      </div>
+      <SectionFrame
+        title="hourly_activity.tsv"
+        meta={peakHour ? `7d · peak hour: ${String(peakHour.hour).padStart(2, "0")}:00 (${fmtNum(peakHour.count)})` : "7d"}
+        foot="> games created bucketed by hour-of-day, summed across last 7 days"
+      >
+        {hours.length === 0 ? (
+          <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
+        ) : (
+          <VBarChart
+            data={hours}
+            getX={(d) => (d as { hour: number }).hour}
+            getY={(d) => (d as { count: number }).count}
+            xLabel={(d) => ((d as { hour: number }).hour % 3 === 0) ? String((d as { hour: number }).hour).padStart(2, "0") : ""}
+            tone="accent"
+            height={140}
+          />
+        )}
+      </SectionFrame>
 
       {/* Row 4: type stats + feedback */}
       <div className="bk-an-row bk-an-row--2col">
