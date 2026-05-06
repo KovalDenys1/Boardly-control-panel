@@ -63,6 +63,16 @@ const gameTypeLabels: Record<string, string> = {
   other: 'Other',
 }
 
+function AsciiBar({ pct }: { pct: number }) {
+  const width = 28
+  const filled = Math.round((pct / 100) * width)
+  return (
+    <span className="bk-gtbar-ascii">
+      {'█'.repeat(filled)}
+      <span style={{ color: 'var(--mute-2)' }}>{'░'.repeat(width - filled)}</span>
+    </span>
+  )
+}
 
 export default async function DashboardPage() {
   const { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay } =
@@ -179,8 +189,9 @@ export default async function DashboardPage() {
           {days.map((d) => {
             const gc = gamesByDay[d.key] ?? 0;
             const uc = usersByDay[d.key] ?? 0;
-            const gPct = maxGames > 0 ? (gc / maxGames) * 100 : 0;
-            const uPct = maxUsers > 0 ? (uc / maxUsers) * 100 : 0;
+            const BAR = 24;
+            const gFill = maxGames > 0 ? Math.round((gc / maxGames) * BAR) : 0;
+            const uFill = maxUsers > 0 ? Math.round((uc / maxUsers) * BAR) : 0;
             const isToday = d.key === todayKey;
             return (
               <div key={d.key} className={`bk-act-row${isToday ? ' bk-act-row--today' : ''}`}>
@@ -188,16 +199,18 @@ export default async function DashboardPage() {
                   {isToday && <span style={{ color: 'var(--accent)', marginRight: 4 }}>▶</span>}
                   {d.label}
                 </span>
-                <div className="bk-act-bar">
-                  <div className="bk-act-bar-fill bk-act-bar-fill--g" style={{ width: `${gPct}%` }} />
-                </div>
+                <span className="bk-act-bar">
+                  <span style={{ color: 'var(--accent)', letterSpacing: '-0.5px' }}>{'█'.repeat(gFill)}</span>
+                  <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - gFill)}</span>
+                </span>
                 <span className="bk-act-cnt" style={{ color: gc > 0 ? 'var(--accent)' : 'var(--mute-2)' }}>
                   {gc}
                 </span>
                 <span style={{ color: 'var(--line-2)', textAlign: 'center' }}>│</span>
-                <div className="bk-act-bar">
-                  <div className="bk-act-bar-fill bk-act-bar-fill--u" style={{ width: `${uPct}%` }} />
-                </div>
+                <span className="bk-act-bar">
+                  <span style={{ color: 'var(--mute)', letterSpacing: '-0.5px' }}>{'█'.repeat(uFill)}</span>
+                  <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - uFill)}</span>
+                </span>
                 <span className="bk-act-cnt" style={{ color: uc > 0 ? 'var(--fg)' : 'var(--mute-2)' }}>
                   {uc}
                 </span>
@@ -244,7 +257,7 @@ export default async function DashboardPage() {
                   {(gameTypeLabels[g.gameType] ?? g.gameType).padEnd(20)}
                 </span>
                 <div className="bk-gtbar-track">
-                  <div className="bk-gtbar-fill" style={{ width: `${pct}%` }} />
+                  <AsciiBar pct={pct} />
                 </div>
                 <span className="bk-gtbar-meta" style={{ color: 'var(--mute)' }}>
                   <span style={{ color: 'var(--fg)' }}>{g._count.id.toLocaleString()}</span>

@@ -306,11 +306,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
   border-bottom: 1px dashed var(--line-2); margin-bottom: 4px;
 }
 .bk-gtbar-name  { color: var(--fg-strong); white-space: pre; }
-.bk-gtbar-track {
-  position: relative; overflow: hidden;
-  height: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--line);
-}
-.bk-gtbar-fill { position: absolute; top: 0; left: 0; bottom: 0; background: var(--accent); }
+.bk-gtbar-track { font-size: 12px; line-height: 1; overflow: hidden; }
+.bk-gtbar-ascii { color: var(--accent); letter-spacing: -0.5px; }
 .bk-gtbar-meta  { font-size: var(--fz-xs); text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ── Tables ──────────────────────────────────────────────────────────── */
@@ -395,13 +392,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-act-row:last-of-type { border-bottom: 0; }
 .bk-act-row--today .bk-act-date { color: var(--accent); }
 .bk-act-date { color: var(--fg); white-space: nowrap; }
-.bk-act-bar {
-  position: relative; overflow: hidden;
-  height: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--line);
-}
-.bk-act-bar-fill { position: absolute; top: 0; left: 0; bottom: 0; }
-.bk-act-bar-fill--g { background: var(--accent); }
-.bk-act-bar-fill--u { background: var(--mute); }
+.bk-act-bar  { font-size: 12px; overflow: hidden; white-space: nowrap; }
 .bk-act-cnt  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* ── Games filter bar ────────────────────────────────────────────────── */
