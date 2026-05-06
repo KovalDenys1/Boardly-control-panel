@@ -8,28 +8,145 @@ const gameTypeLabels: Record<string, string> = {
   fake_artist: "Fake Artist", other: "Other",
 };
 
-function pct(val: number, total: number) {
-  return total === 0 ? 0 : Math.round((val / total) * 100);
+function fmtNum(n: number) { return n.toLocaleString("en-US"); }
+function fmtPct(n: number, d = 1) { return n.toFixed(d) + "%"; }
+function fmtSec(s: number | null) {
+  if (!s) return "—";
+  const m = Math.floor(s / 60), r = s % 60;
+  return m > 0 ? `${m}m ${String(r).padStart(2, "0")}s` : `${s}s`;
+}
+function dayLabel(iso: string) {
+  const d = new Date(iso + "T00:00:00Z");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-type BarRow = { label: string; value: number; max: number; color?: string; suffix?: string };
-
-function BarChart({ rows, color = "var(--accent)" }: { rows: BarRow[]; color?: string }) {
+// ---- KPI card ----
+function KPI({ code, label, value, sub, tone = "mute" }: {
+  code: string; label: string; value: string; sub: string; tone?: string;
+}) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {rows.map(({ label, value, max, color: rowColor, suffix }) => {
-        const width = max === 0 ? 0 : Math.max(1, Math.round((value / max) * 100));
+    <div className={`bk-kpi bk-kpi--${tone}`}>
+      <div className="bk-kpi-top">
+        <span className="bk-kpi-code">{code}</span>
+        <span className="bk-kpi-label">{label}</span>
+      </div>
+      <div className="bk-kpi-value">
+        {value}
+        <span className="bk-stat-cursor">_</span>
+      </div>
+      <div className="bk-kpi-sub">{`> ${sub}`}</div>
+      <span className="bk-stat-corner bk-stat-corner--tl">┌</span>
+      <span className="bk-stat-corner bk-stat-corner--tr">┐</span>
+      <span className="bk-stat-corner bk-stat-corner--bl">└</span>
+      <span className="bk-stat-corner bk-stat-corner--br">┘</span>
+    </div>
+  );
+}
+
+// ---- Section frame ----
+function SectionFrame({ title, meta, children, foot }: {
+  title: string; meta?: string; children: React.ReactNode; foot?: string;
+}) {
+  return (
+    <section className="bk-section">
+      <header className="bk-section-head">
+        <span className="bk-section-bracket">┌──</span>
+        <span className="bk-section-title">{title}</span>
+        {meta && <span className="bk-section-meta bk-mute">{meta}</span>}
+        <span className="bk-section-bracket bk-section-fill">─</span>
+        <span className="bk-section-bracket">──┐</span>
+      </header>
+      <div className="bk-section-body">{children}</div>
+      <footer className="bk-section-foot">
+        <span className="bk-section-bracket">└──</span>
+        {foot && <span className="bk-mute">{foot}</span>}
+        <span className="bk-section-bracket bk-section-fill">─</span>
+        <span className="bk-section-bracket">──┘</span>
+      </footer>
+    </section>
+  );
+}
+
+// ---- Vertical bar chart ----
+function VBarChart({ data, getX, getY, xLabel, tone = "ok", height = 180, ticks = 4 }: {
+  data: unknown[];
+  getX: (d: unknown) => string | number;
+  getY: (d: unknown) => number;
+  xLabel: (d: unknown, i: number) => string;
+  tone?: string;
+  height?: number;
+  ticks?: number;
+}) {
+  const max = Math.max(...data.map(getY), 1);
+  const niceMax = Math.ceil(max / ticks) * ticks;
+  const tickVals = Array.from({ length: ticks + 1 }, (_, i) => Math.round(niceMax * (1 - i / ticks)));
+
+  return (
+    <div className="bk-chart">
+      <div className="bk-chart-yaxis" style={{ height }}>
+        {tickVals.map((v, i) => (
+          <div key={i} className="bk-chart-ytick">
+            <span className="bk-chart-ytick-label">{fmtNum(v)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="bk-chart-plot" style={{ height }}>
+        <div className="bk-chart-grid" aria-hidden="true">
+          {tickVals.map((_, i) => <div key={i} className="bk-chart-grid-line" />)}
+        </div>
+        <div className="bk-chart-bars">
+          {data.map((d, i) => {
+            const v = getY(d);
+            const pct = (v / niceMax) * 100;
+            return (
+              <div key={i} className={`bk-vbar bk-vbar--${tone}`} title={`${getX(d)}: ${fmtNum(v)}`}>
+                <div className="bk-vbar-fill" style={{ height: pct + "%" }}>
+                  <span className="bk-vbar-tip">{fmtNum(v)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="bk-chart-xaxis">
+        <div className="bk-chart-xaxis-spacer" />
+        <div className="bk-chart-xaxis-labels">
+          {data.map((d, i) => (
+            <span key={i} className="bk-chart-xlabel">{xLabel(d, i)}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Horizontal bar list ----
+function HBarList({ rows, max, tone = "ok" }: {
+  rows: { name: string; value: number; aux?: string }[];
+  max: number;
+  tone?: string;
+}) {
+  return (
+    <div className="bk-hblist">
+      {rows.map((r, i) => {
+        const pct = (r.value / max) * 100;
         return (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ width: 96, flexShrink: 0, color: "var(--mute)", fontSize: "var(--fz-xs)", textAlign: "right", fontFamily: "var(--mono)" }}>
-              {label}
-            </span>
-            <div style={{ flex: 1, height: 10, background: "var(--line)", position: "relative" }}>
-              <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${width}%`, background: rowColor ?? color, transition: "width 0.2s" }} />
+          <div className="bk-hbrow" key={i}>
+            <div className="bk-hbrow-name">{r.name}</div>
+            <div className="bk-hbrow-track">
+              <div className={`bk-hbrow-fill bk-hbrow-fill--${tone}`} style={{ width: pct + "%" }} />
+              <span className="bk-hbrow-pct bk-mute">{Math.round(pct)}%</span>
             </div>
-            <span style={{ width: 52, flexShrink: 0, color: "var(--fg-strong)", fontSize: "var(--fz-xs)", fontFamily: "var(--mono)", fontWeight: 600 }}>
-              {value}{suffix ?? ""}
-            </span>
+            <div className="bk-hbrow-meta">
+              <span className="bk-fg">{fmtNum(r.value)}</span>
+              {r.aux !== undefined && (
+                <>
+                  <span className="bk-mute"> · </span>
+                  <span className="bk-mute">avg </span>
+                  <span className="bk-fg">{r.aux}</span>
+                </>
+              )}
+            </div>
           </div>
         );
       })}
@@ -37,21 +154,49 @@ function BarChart({ rows, color = "var(--accent)" }: { rows: BarRow[]; color?: s
   );
 }
 
-function SectionBox({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+// ---- Status breakdown ----
+function StatusBreakdown({ counts }: {
+  counts: Record<string, number>;
+}) {
+  const order = [
+    { key: "finished",  label: "FINISHED",  tone: "ok" },
+    { key: "abandoned", label: "ABANDONED", tone: "bad" },
+    { key: "cancelled", label: "CANCELLED", tone: "warn" },
+    { key: "playing",   label: "PLAYING",   tone: "accent" },
+    { key: "waiting",   label: "WAITING",   tone: "mute" },
+  ];
+  const total = order.reduce((a, o) => a + (counts[o.key] ?? 0), 0);
+
   return (
-    <div className="bk-section">
-      <div className="bk-section-head">
-        <span className="bk-section-bracket">┌─</span>
-        <span className="bk-section-title">{title}</span>
-        {sub && <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)", marginLeft: 8 }}>{sub}</span>}
-        <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
-        <span className="bk-section-bracket">─┐</span>
+    <div className="bk-statusbk">
+      <div className="bk-statusbk-bar">
+        {order.map((o) => {
+          const v = counts[o.key] ?? 0;
+          const pct = total > 0 ? (v / total) * 100 : 0;
+          if (pct === 0) return null;
+          return (
+            <div
+              key={o.key}
+              className={`bk-statusbk-seg bk-statusbk-seg--${o.tone}`}
+              style={{ width: pct + "%" }}
+              title={`${o.label}: ${fmtNum(v)}`}
+            />
+          );
+        })}
       </div>
-      <div className="bk-section-body">{children}</div>
-      <div className="bk-section-foot">
-        <span className="bk-section-bracket">└</span>
-        <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(80)}</span>
-        <span className="bk-section-bracket">┘</span>
+      <div className="bk-statusbk-legend">
+        {order.map((o) => {
+          const v = counts[o.key] ?? 0;
+          const pct = total > 0 ? (v / total) * 100 : 0;
+          return (
+            <div key={o.key} className="bk-statusbk-row">
+              <span className={`bk-statusbk-swatch bk-statusbk-swatch--${o.tone}`} />
+              <span className="bk-statusbk-label">{o.label}</span>
+              <span className="bk-statusbk-count bk-fg">{fmtNum(v)}</span>
+              <span className="bk-statusbk-pct bk-mute">{fmtPct(pct, 1)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -72,24 +217,24 @@ async function getAnalytics() {
     activeWeekly,
     feedbackByType,
   ] = await Promise.all([
-    prisma.$queryRaw<{ day: string; count: bigint }[]>`
-      SELECT TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'Mon DD') AS day,
+    prisma.$queryRaw<{ day: string; count: number }[]>`
+      SELECT TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
              COUNT(*)::int AS count
       FROM "Users"
       WHERE "isGuest" = false AND "createdAt" >= ${thirtyDaysAgo}
-      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC'), TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'Mon DD')
+      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC')
       ORDER BY DATE("createdAt" AT TIME ZONE 'UTC')
     `,
-    prisma.$queryRaw<{ day: string; count: bigint }[]>`
-      SELECT TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'Mon DD') AS day,
+    prisma.$queryRaw<{ day: string; count: number }[]>`
+      SELECT TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
              COUNT(*)::int AS count
       FROM "Games"
       WHERE "createdAt" >= ${thirtyDaysAgo}
-      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC'), TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'Mon DD')
+      GROUP BY DATE("createdAt" AT TIME ZONE 'UTC')
       ORDER BY DATE("createdAt" AT TIME ZONE 'UTC')
     `,
     prisma.games.groupBy({ by: ["status"], _count: { id: true } }),
-    prisma.$queryRaw<{ type: string; count: bigint; avg_dur: number | null }[]>`
+    prisma.$queryRaw<{ type: string; count: number; avg_dur: number | null }[]>`
       SELECT "gameType" AS type,
              COUNT(*)::int AS count,
              AVG("durationSeconds")::int AS avg_dur
@@ -98,7 +243,7 @@ async function getAnalytics() {
       GROUP BY "gameType"
       ORDER BY count DESC
     `,
-    prisma.$queryRaw<{ hour: number; count: bigint }[]>`
+    prisma.$queryRaw<{ hour: number; count: number }[]>`
       SELECT EXTRACT(HOUR FROM "createdAt" AT TIME ZONE 'UTC')::int AS hour,
              COUNT(*)::int AS count
       FROM "Games"
@@ -117,140 +262,197 @@ async function getAnalytics() {
 export default async function AnalyticsPage() {
   const { regsByDay, gamesByDay, statusCounts, typeStats, hourlyGames, totalUsers, activeWeekly, feedbackByType } = await getAnalytics();
 
-  const totalGames = statusCounts.reduce((s, r) => s + r._count.id, 0);
-  const finishedCount  = statusCounts.find(r => r.status === "finished")?._count.id  ?? 0;
-  const abandonedCount = statusCounts.find(r => r.status === "abandoned")?._count.id ?? 0;
-  const playingCount   = statusCounts.find(r => r.status === "playing")?._count.id   ?? 0;
-  const waitingCount   = statusCounts.find(r => r.status === "waiting")?._count.id   ?? 0;
-  const completionRate = pct(finishedCount, finishedCount + abandonedCount);
+  const statusMap: Record<string, number> = {};
+  for (const r of statusCounts) statusMap[r.status] = r._count.id;
 
-  const maxRegs  = Math.max(...regsByDay.map(r => Number(r.count)), 1);
-  const maxGames = Math.max(...gamesByDay.map(r => Number(r.count)), 1);
-  const maxType  = Math.max(...typeStats.map(r => Number(r.count)), 1);
-  const maxHour  = Math.max(...hourlyGames.map(r => Number(r.count)), 1);
-  const maxFeed  = Math.max(...feedbackByType.map(r => r._count.id), 1);
+  const totalGames     = statusCounts.reduce((s, r) => s + r._count.id, 0);
+  const finishedCount  = statusMap["finished"]  ?? 0;
+  const abandonedCount = statusMap["abandoned"] ?? 0;
+  const completionRate = (finishedCount + abandonedCount) > 0
+    ? (finishedCount / (finishedCount + abandonedCount)) * 100
+    : 0;
 
-  const fmtDur = (s: number | null) => {
-    if (!s) return "—";
-    const m = Math.floor(s / 60), sec = s % 60;
-    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
-  };
+  const regsTotal30  = regsByDay.reduce((a, b) => a + Number(b.count), 0);
+  const gamesTotal30 = gamesByDay.reduce((a, b) => a + Number(b.count), 0);
+  const peakHour     = hourlyGames.length > 0
+    ? hourlyGames.reduce((m, h) => Number(h.count) > Number(m.count) ? h : m, hourlyGames[0])
+    : null;
+
+  const typeMax = Math.max(...typeStats.map(t => Number(t.count)), 1);
+  const fbMax   = Math.max(...feedbackByType.map(t => t._count.id), 1);
+
+  const regsDays  = regsByDay.map(r => ({ day: r.day, count: Number(r.count) }));
+  const gamesDays = gamesByDay.map(r => ({ day: r.day, count: Number(r.count) }));
+  const hours     = hourlyGames.map(r => ({ hour: Number(r.hour), count: Number(r.count) }));
 
   return (
     <div className="bk-page">
-      <div className="bk-page-head">
-        <div className="bk-breadcrumb">cat ./analytics.log</div>
+      <header className="bk-page-head">
+        <div className="bk-breadcrumb">
+          <span className="bk-mute">~/admin</span>
+          <span className="bk-mute">/</span>
+          <span className="bk-fg">analytics</span>
+          <span className="bk-mute"> $ </span>
+          <span className="bk-mute">SELECT</span>
+          <span className="bk-fg"> * FROM events WHERE ts &gt; now() - interval &apos;30d&apos;</span>
+        </div>
         <div className="bk-page-title-row">
-          <div>
-            <h1 className="bk-page-title">analytics<span className="bk-stat-cursor">▊</span></h1>
-            <p className="bk-page-sub">// product metrics · last 30 days unless noted</p>
-          </div>
+          <h1 className="bk-page-title">Analytics<span className="bk-cursor">▊</span></h1>
           <div className="bk-pill-row">
-            <span className="bk-pill bk-pill--mute">
-              <span className="bk-pill-count">{totalUsers}</span>
-              <span className="bk-pill-sep">·</span><span>USERS</span>
-            </span>
             <span className="bk-pill bk-pill--ok">
-              <span className="bk-pill-count">{activeWeekly}</span>
-              <span className="bk-pill-sep">·</span><span>WAU</span>
+              <span className="bk-pill-count">30d</span>
+              <span className="bk-pill-sep">·</span>
+              <span className="bk-pill-label">REGISTRATIONS &amp; GAMES</span>
             </span>
             <span className="bk-pill bk-pill--mute">
-              <span className="bk-pill-count">{totalGames}</span>
-              <span className="bk-pill-sep">·</span><span>GAMES</span>
-            </span>
-            <span className={`bk-pill bk-pill--${completionRate >= 60 ? "ok" : completionRate >= 30 ? "mute" : "bad"}`}>
-              <span className="bk-pill-count">{completionRate}%</span>
-              <span className="bk-pill-sep">·</span><span>COMPLETION</span>
+              <span className="bk-pill-count">7d</span>
+              <span className="bk-pill-sep">·</span>
+              <span className="bk-pill-label">HOURLY ACTIVITY</span>
             </span>
           </div>
         </div>
+        <div className="bk-page-sub">// platform analytics — aggregates over rolling windows</div>
+      </header>
+
+      {/* KPI strip */}
+      <div className="bk-kpi-grid">
+        <KPI
+          code="0x01" label="TOTAL USERS"
+          value={fmtNum(totalUsers)}
+          sub="all-time registered"
+          tone="mute"
+        />
+        <KPI
+          code="0x02" label="WEEKLY ACTIVE"
+          value={fmtNum(activeWeekly)}
+          sub={`${fmtPct(totalUsers > 0 ? activeWeekly / totalUsers * 100 : 0, 1)} of total · 7d`}
+          tone="ok"
+        />
+        <KPI
+          code="0x03" label="TOTAL GAMES"
+          value={fmtNum(totalGames)}
+          sub="all-time finished + ongoing"
+          tone="mute"
+        />
+        <KPI
+          code="0x04" label="COMPLETION RATE"
+          value={fmtPct(completionRate)}
+          sub="finished / (finished + abandoned)"
+          tone="ok"
+        />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(480px, 1fr))", gap: 16 }}>
-
-        <SectionBox title="new_registrations" sub="// last 30 days">
-          {regsByDay.length === 0 ? (
-            <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>no data</span>
+      {/* Row 1: registrations + games by day */}
+      <div className="bk-an-row bk-an-row--2col">
+        <SectionFrame
+          title="registrations_by_day.tsv"
+          meta={`30d · ${fmtNum(regsTotal30)} new users`}
+          foot={`> ${regsDays.length} buckets · 1 day each`}
+        >
+          {regsDays.length === 0 ? (
+            <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
           ) : (
-            <BarChart rows={regsByDay.map(r => ({ label: r.day, value: Number(r.count), max: maxRegs }))} />
+            <VBarChart
+              data={regsDays}
+              getX={(d) => (d as { day: string }).day}
+              getY={(d) => (d as { count: number }).count}
+              xLabel={(d, i) => (i % 5 === 0 || i === regsDays.length - 1) ? dayLabel((d as { day: string }).day) : ""}
+              tone="ok"
+              height={160}
+            />
           )}
-        </SectionBox>
+        </SectionFrame>
 
-        <SectionBox title="games_created" sub="// last 30 days">
-          {gamesByDay.length === 0 ? (
-            <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>no data</span>
+        <SectionFrame
+          title="games_by_day.tsv"
+          meta={`30d · ${fmtNum(gamesTotal30)} games`}
+          foot={`> ${gamesDays.length} buckets · 1 day each`}
+        >
+          {gamesDays.length === 0 ? (
+            <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
           ) : (
-            <BarChart rows={gamesByDay.map(r => ({ label: r.day, value: Number(r.count), max: maxGames, color: "var(--ok)" }))} color="var(--ok)" />
+            <VBarChart
+              data={gamesDays}
+              getX={(d) => (d as { day: string }).day}
+              getY={(d) => (d as { count: number }).count}
+              xLabel={(d, i) => (i % 5 === 0 || i === gamesDays.length - 1) ? dayLabel((d as { day: string }).day) : ""}
+              tone="accent"
+              height={160}
+            />
           )}
-        </SectionBox>
+        </SectionFrame>
+      </div>
 
-        <SectionBox title="game_outcomes" sub={`// ${totalGames} total sessions`}>
-          <BarChart rows={[
-            { label: "finished",  value: finishedCount,  max: totalGames, color: "var(--accent)" },
-            { label: "abandoned", value: abandonedCount, max: totalGames, color: "var(--bad)" },
-            { label: "playing",   value: playingCount,   max: totalGames, color: "var(--ok)" },
-            { label: "waiting",   value: waitingCount,   max: totalGames, color: "var(--mute)" },
-          ]} />
-          <div style={{ marginTop: 12, color: "var(--mute)", fontSize: "var(--fz-xs)" }}>
-            completion rate (finished / finished+abandoned) ·{" "}
-            <span style={{ color: completionRate >= 60 ? "var(--ok)" : completionRate >= 30 ? "var(--accent)" : "var(--bad)", fontWeight: 600 }}>
-              {completionRate}%
-            </span>
-          </div>
-        </SectionBox>
+      {/* Row 2: status breakdown */}
+      <div className="bk-an-row">
+        <SectionFrame
+          title="game_status_distribution.tsv"
+          meta={`${fmtNum(totalGames)} games`}
+          foot="> stacked horizontal bar · hover segments for details"
+        >
+          <StatusBreakdown counts={statusMap} />
+        </SectionFrame>
+      </div>
 
-        <SectionBox title="activity_by_hour" sub="// last 7 days, UTC">
-          {hourlyGames.length === 0 ? (
-            <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>no data</span>
+      {/* Row 3: hourly activity */}
+      <div className="bk-an-row">
+        <SectionFrame
+          title="hourly_activity.tsv"
+          meta={peakHour ? `7d · peak hour: ${String(peakHour.hour).padStart(2, "0")}:00 (${fmtNum(peakHour.count)})` : "7d"}
+          foot="> games created bucketed by hour-of-day, summed across last 7 days"
+        >
+          {hours.length === 0 ? (
+            <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
           ) : (
-            <BarChart rows={hourlyGames.map(r => ({
-              label: `${String(r.hour).padStart(2, "0")}:00`,
-              value: Number(r.count),
-              max: maxHour,
-              color: "var(--accent)",
-            }))} />
+            <VBarChart
+              data={hours}
+              getX={(d) => (d as { hour: number }).hour}
+              getY={(d) => (d as { count: number }).count}
+              xLabel={(d) => ((d as { hour: number }).hour % 3 === 0) ? String((d as { hour: number }).hour).padStart(2, "0") : ""}
+              tone="accent"
+              height={140}
+            />
           )}
-        </SectionBox>
+        </SectionFrame>
+      </div>
 
-        <SectionBox title="popular_game_types" sub="// finished games only">
+      {/* Row 4: type stats + feedback */}
+      <div className="bk-an-row bk-an-row--2col">
+        <SectionFrame
+          title="games_by_type.tsv"
+          meta={`${typeStats.length} types · all-time finished`}
+          foot="> count · avg duration of finished games"
+        >
           {typeStats.length === 0 ? (
-            <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>no data</span>
+            <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
           ) : (
-            <BarChart rows={typeStats.map(r => ({
-              label: gameTypeLabels[r.type] ?? r.type,
-              value: Number(r.count),
-              max: maxType,
-              color: "var(--ok)",
-            }))} />
+            <HBarList
+              rows={typeStats.map(t => ({
+                name: gameTypeLabels[t.type] ?? t.type,
+                value: Number(t.count),
+                aux: fmtSec(t.avg_dur),
+              }))}
+              max={typeMax}
+              tone="ok"
+            />
           )}
-        </SectionBox>
+        </SectionFrame>
 
-        <SectionBox title="avg_game_duration" sub="// finished games by type">
-          {typeStats.filter(r => r.avg_dur).length === 0 ? (
-            <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>no data</span>
+        <SectionFrame
+          title="feedback_by_type.tsv"
+          meta={`${feedbackByType.reduce((a, b) => a + b._count.id, 0)} reports · all-time`}
+          foot="> categories submitted via in-product feedback form"
+        >
+          {feedbackByType.length === 0 ? (
+            <span className="bk-mute" style={{ fontSize: "var(--fz-xs)" }}>no data</span>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {typeStats.filter(r => r.avg_dur).sort((a, b) => (b.avg_dur ?? 0) - (a.avg_dur ?? 0)).map(r => (
-                <div key={r.type} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px dashed var(--line)" }}>
-                  <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{gameTypeLabels[r.type] ?? r.type}</span>
-                  <span style={{ color: "var(--fg-strong)", fontSize: "var(--fz-xs)", fontFamily: "var(--mono)", fontWeight: 600 }}>{fmtDur(r.avg_dur)}</span>
-                </div>
-              ))}
-            </div>
+            <HBarList
+              rows={feedbackByType.map(t => ({ name: t.type, value: t._count.id }))}
+              max={fbMax}
+              tone="accent"
+            />
           )}
-        </SectionBox>
-
-        {feedbackByType.length > 0 && (
-          <SectionBox title="feedback_by_type" sub="// all time">
-            <BarChart rows={feedbackByType.map(r => ({
-              label: r.type,
-              value: r._count.id,
-              max: maxFeed,
-              color: r.type === "bug" ? "var(--bad)" : r.type === "praise" ? "var(--ok)" : "var(--accent)",
-            }))} />
-          </SectionBox>
-        )}
-
+        </SectionFrame>
       </div>
     </div>
   );
