@@ -7,13 +7,22 @@ async function getGame(id: string) {
     where: { id },
     select: {
       id: true, gameType: true, status: true, currentTurn: true,
-      createdAt: true, startedAt: true, endedAt: true, durationSeconds: true,
-      Lobbies: { select: { code: true, name: true } },
+      createdAt: true, startedAt: true, endedAt: true, abandonedAt: true,
+      lastMoveAt: true, durationSeconds: true, terminalMetadata: true,
+      Lobbies: {
+        select: {
+          code: true, name: true, maxPlayers: true, turnTimer: true,
+          allowSpectators: true, spectatorCount: true,
+          password: true,
+          Users: { select: { username: true, email: true } },
+        },
+      },
       Players: {
         where: { Users: { Bots: null } },
         orderBy: { placement: "asc" },
         select: {
-          score: true, finalScore: true, placement: true, isWinner: true,
+          score: true, finalScore: true, placement: true,
+          isWinner: true, position: true, scorecard: true,
           Users: { select: { id: true, username: true, email: true, isGuest: true, role: true } },
         },
       },
@@ -50,9 +59,41 @@ function fmtDur(s: number | null) {
   return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 }
 
-function placement(n: number | null) {
+function placementLabel(n: number | null) {
   if (!n) return "—";
-  return `${n}${["st","nd","rd"][n-1] ?? "th"}`;
+  return `${n}${["st", "nd", "rd"][n - 1] ?? "th"}`;
+}
+
+function SectionBox({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bk-section">
+      <div className="bk-section-head">
+        <span className="bk-section-bracket">┌─</span>
+        <span className="bk-section-title">{title}</span>
+        <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
+        <span className="bk-section-bracket">─┐</span>
+      </div>
+      <div className="bk-section-body">{children}</div>
+      <div className="bk-section-foot">
+        <span className="bk-section-bracket">└</span>
+        <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(80)}</span>
+        <span className="bk-section-bracket">┘</span>
+      </div>
+    </div>
+  );
+}
+
+function InfoGrid({ rows }: { rows: [string, React.ReactNode][] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "6px 40px" }}>
+      {rows.map(([label, value]) => (
+        <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
+          <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)", letterSpacing: "0.08em" }}>{label}</span>
+          <span style={{ color: "var(--fg-strong)", fontSize: "var(--fz-xs)", textAlign: "right", maxWidth: "60%" }}>{value}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default async function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -60,24 +101,37 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   const game = await getGame(id);
   if (!game) notFound();
 
-  const info = [
+  const lobby = game.Lobbies;
+  const creator = lobby?.Users;
+
+  const gameInfoRows: [string, React.ReactNode][] = [
     ["game type",    gameTypeLabels[game.gameType] ?? game.gameType],
-    ["lobby",        game.Lobbies ? `${game.Lobbies.name}  [${game.Lobbies.code}]` : "—"],
+    ["lobby code",   lobby ? <span style={{ color: "var(--accent)" }}>{lobby.code}</span> : "—"],
+    ["lobby name",   lobby?.name ?? "—"],
+    ["creator",      creator?.username ?? <span style={{ color: "var(--mute-2)" }}>—</span>],
+    ["creator email", creator?.email ?? <span style={{ color: "var(--mute-2)" }}>—</span>],
     ["created",      fmt(game.createdAt)],
     ["started",      fmt(game.startedAt)],
     ["ended",        fmt(game.endedAt)],
+    ...(game.abandonedAt ? [["abandoned at", fmt(game.abandonedAt)] as [string, React.ReactNode]] : []),
+    ["last move",    fmt(game.lastMoveAt)],
     ["duration",     fmtDur(game.durationSeconds)],
     ["turns played", game.currentTurn > 0 ? String(game.currentTurn) : "—"],
     ["players",      String(game.Players.length)],
   ];
 
+  const lobbyRows: [string, React.ReactNode][] = lobby ? [
+    ["max players",      String(lobby.maxPlayers)],
+    ["turn timer",       `${lobby.turnTimer}s`],
+    ["password",         lobby.password ? <span style={{ color: "var(--bad)" }}>protected</span> : <span style={{ color: "var(--mute-2)" }}>none</span>],
+    ["spectators",       lobby.allowSpectators ? `allowed (${lobby.spectatorCount} watched)` : <span style={{ color: "var(--mute-2)" }}>disabled</span>],
+  ] : [];
+
   return (
     <div className="bk-page">
       <div className="bk-page-head">
         <div className="bk-breadcrumb">
-          <Link href="/games" style={{ color: "var(--accent)", textDecoration: "none" }}>
-            ./games.log
-          </Link>
+          <Link href="/games" style={{ color: "var(--accent)", textDecoration: "none" }}>./games.log</Link>
           {" "}/ {game.id}
         </div>
         <div className="bk-page-title-row">
@@ -94,102 +148,77 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      {/* Game info */}
-      <div className="bk-section" style={{ marginBottom: 24 }}>
-        <div className="bk-section-head">
-          <span className="bk-section-bracket">┌─</span>
-          <span className="bk-section-title">game_info</span>
-          <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
-          <span className="bk-section-bracket">─┐</span>
-        </div>
-        <div className="bk-section-body">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 40px" }}>
-            {info.map(([label, value]) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px dashed var(--line)" }}>
-                <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)", letterSpacing: "0.08em" }}>{label}</span>
-                <span style={{ color: "var(--fg-strong)", fontSize: "var(--fz-xs)" }}>{value}</span>
-              </div>
-            ))}
+      <SectionBox title="game_info">
+        <InfoGrid rows={gameInfoRows} />
+      </SectionBox>
+
+      {lobby && (
+        <SectionBox title="lobby_config">
+          <InfoGrid rows={lobbyRows} />
+        </SectionBox>
+      )}
+
+      <SectionBox title="players">
+        <div className="bk-table-wrap" style={{ marginBottom: 0 }}>
+          <table className="bk-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>PLACEMENT</th>
+                <th>PLAYER</th>
+                <th>TYPE</th>
+                <th className="bk-th-right">SCORE</th>
+                <th className="bk-th-right">FINAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {game.Players.map((p) => (
+                <tr key={p.Users.id}>
+                  <td className="bk-td-num" style={{ color: "var(--mute)" }}>{p.position}</td>
+                  <td>
+                    <span style={{ color: "var(--fg-strong)" }}>{placementLabel(p.placement)}</span>
+                    {p.isWinner && (
+                      <> <span className="bk-brk bk-brk--warn">
+                        <span className="bk-brk-l">[</span>WINNER<span className="bk-brk-r">]</span>
+                      </span></>
+                    )}
+                  </td>
+                  <td>
+                    <div className="bk-cell-user-name">
+                      {p.Users.username ?? <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>guest</span>}
+                      {p.Users.role === "admin" && (
+                        <> <span className="bk-brk bk-brk--accent" style={{ fontSize: "10px" }}>
+                          <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
+                        </span></>
+                      )}
+                    </div>
+                    <div className="bk-cell-user-mail">
+                      {p.Users.isGuest ? "guest session" : (p.Users.email ?? "—")}
+                    </div>
+                  </td>
+                  <td>
+                    {p.Users.isGuest ? (
+                      <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>GUEST<span className="bk-brk-r">]</span></span>
+                    ) : (
+                      <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>REG<span className="bk-brk-r">]</span></span>
+                    )}
+                  </td>
+                  <td className="bk-td-right" style={{ color: "var(--fg)" }}>{p.score}</td>
+                  <td className="bk-td-right" style={{ color: "var(--fg-strong)", fontWeight: 600 }}>
+                    {p.finalScore ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {game.Players.length === 0 && (
+            <div className="bk-empty">no player records found</div>
+          )}
+          <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
+            {game.Players.length} players · bots excluded · guest emails not stored
           </div>
         </div>
-        <div className="bk-section-foot">
-          <span className="bk-section-bracket">└</span>
-          <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(80)}</span>
-          <span className="bk-section-bracket">┘</span>
-        </div>
-      </div>
-
-      {/* Players */}
-      <div className="bk-table-wrap">
-        <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", background: "rgba(0,0,0,0.3)" }}>
-          <span style={{ color: "var(--accent)", fontSize: "var(--fz-xs)", fontWeight: 600, letterSpacing: "0.14em" }}>
-            PLAYERS
-          </span>
-        </div>
-        <table className="bk-table">
-          <thead>
-            <tr>
-              <th>PLACEMENT</th>
-              <th>USERNAME</th>
-              <th>EMAIL</th>
-              <th>TYPE</th>
-              <th className="bk-th-right">SCORE</th>
-              <th className="bk-th-right">FINAL SCORE</th>
-            </tr>
-          </thead>
-          <tbody>
-            {game.Players.map((p, i) => (
-              <tr key={i} className={p.isWinner ? "winner-row" : ""}>
-                <td>
-                  <span style={{ color: "var(--fg-strong)" }}>{placement(p.placement)}</span>
-                  {p.isWinner && (
-                    <> <span className="bk-brk bk-brk--warn">
-                      <span className="bk-brk-l">[</span>WINNER<span className="bk-brk-r">]</span>
-                    </span></>
-                  )}
-                </td>
-                <td>
-                  <div className="bk-cell-user-name">{p.Users.username ?? "—"}</div>
-                  {p.Users.role === "admin" && (
-                    <div style={{ marginTop: 2 }}>
-                      <span className="bk-brk bk-brk--accent" style={{ fontSize: "10px" }}>
-                        <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
-                      </span>
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {p.Users.isGuest
-                    ? <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>guest session</span>
-                    : <span className="bk-cell-user-mail">{p.Users.email ?? "—"}</span>
-                  }
-                </td>
-                <td>
-                  {p.Users.isGuest ? (
-                    <span className="bk-brk bk-brk--mute">
-                      <span className="bk-brk-l">[</span>GUEST<span className="bk-brk-r">]</span>
-                    </span>
-                  ) : (
-                    <span className="bk-brk bk-brk--mute">
-                      <span className="bk-brk-l">[</span>REGISTERED<span className="bk-brk-r">]</span>
-                    </span>
-                  )}
-                </td>
-                <td className="bk-td-right" style={{ color: "var(--fg)" }}>{p.score}</td>
-                <td className="bk-td-right" style={{ color: "var(--fg-strong)", fontWeight: 600 }}>
-                  {p.finalScore ?? "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {game.Players.length === 0 && (
-          <div className="bk-empty">no player records found</div>
-        )}
-        <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
-          {game.Players.length} players · bots excluded · guest emails not stored
-        </div>
-      </div>
+      </SectionBox>
     </div>
   );
 }
