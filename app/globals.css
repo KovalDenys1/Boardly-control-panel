@@ -372,34 +372,18 @@ input, button, textarea, select { font: inherit; color: inherit; }
   background: rgba(0,0,0,0.3); color: var(--mute); font-size: var(--fz-xs);
 }
 
-/* ── Games filter card (help-box style) ──────────────────────────────── */
-.bk-filter-card  { margin-bottom: 14px; }
-.bk-filter-head  {
-  display: flex; align-items: center; gap: 8px;
-  font-size: var(--fz-xs); color: var(--mute);
-  white-space: nowrap; overflow: hidden;
-}
-.bk-filter-label { color: var(--accent); letter-spacing: 0.06em; flex-shrink: 0; }
-.bk-filter-fill  { flex: 1; overflow: hidden; color: var(--mute-2); }
-.bk-filter-count { color: var(--mute); flex-shrink: 0; }
-.bk-filter-corner { color: var(--mute); flex-shrink: 0; }
-.bk-filter-body  { padding: 10px 12px; border: 1px solid var(--line); border-top: none; display: flex; gap: 24px; flex-wrap: wrap; }
-.bk-filter-row   { display: flex; align-items: center; gap: 8px; }
-.bk-filter-key   { color: var(--mute); font-size: var(--fz-xs); letter-spacing: 0.06em; flex-shrink: 0; }
-.bk-filter-key::after { content: " ::"; color: var(--mute-2); }
+/* ── Games filter bar ────────────────────────────────────────────────── */
+.bk-filter-bar   { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.bk-select-wrap  { display: flex; align-items: center; flex-shrink: 0; }
+.bk-select-brk   { color: var(--line); font-family: var(--mono); font-size: var(--fz-xs); user-select: none; }
 .bk-filter-select {
-  appearance: none; background: transparent; border: none; border-bottom: 1px dashed var(--line-2);
-  color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
-  padding: 2px 4px; outline: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background: transparent; border: none; outline: none;
+  color: var(--fg-strong); font-family: var(--mono); font-size: var(--fz-xs);
+  padding: 0 2px; cursor: pointer; font-weight: 600;
 }
-.bk-filter-select:focus { border-bottom-color: var(--accent); color: var(--accent); }
-.bk-filter-input {
-  background: transparent; border: none; border-bottom: 1px dashed var(--line-2);
-  color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
-  padding: 2px 4px; outline: none; width: 180px;
-}
-.bk-filter-input:focus { border-bottom-color: var(--accent); }
-.bk-filter-input::placeholder { color: var(--mute-2); }
+.bk-filter-select:focus { color: var(--accent); }
+.bk-select-wrap:focus-within .bk-select-brk { color: var(--accent); }
 
 /* ── User search bar ─────────────────────────────────────────────────── */
 .bk-search-bar   {
