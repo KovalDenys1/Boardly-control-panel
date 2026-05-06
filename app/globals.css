@@ -336,6 +336,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
   font-size: var(--fz-xs); background: rgba(0,0,0,0.25);
 }
 .bk-empty { padding: 36px; text-align: center; color: var(--mute); }
+.bk-empty-cell { padding: 56px 0; text-align: center; color: var(--mute); font-size: var(--fz-xs); letter-spacing: 0.08em; font-family: var(--mono); }
 
 /* ── Sortable table headers ──────────────────────────────────────────── */
 .bk-th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
@@ -400,16 +401,19 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-act-cnt  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* ── Page number input ───────────────────────────────────────────────── */
-.bk-page-input {
-  width: 52px; text-align: center;
-  background: rgba(0,0,0,0.5); border: 1px solid var(--line-2);
-  color: var(--fg-strong); padding: 3px 6px; font-size: var(--fz-xs);
-  font-family: var(--mono); outline: none;
-  -moz-appearance: textfield;
+.bk-page-input-inline {
+  background: transparent; border: none; outline: none;
+  color: var(--fg-strong); font-family: var(--mono); font-size: var(--fz-xs);
+  font-weight: 600; text-align: right; padding: 0; min-width: 1ch;
 }
-.bk-page-input:focus { border-color: var(--accent); }
-.bk-page-input::-webkit-outer-spin-button,
-.bk-page-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.bk-page-form {
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px 10px; font-size: var(--fz-xs);
+  border: 1px solid var(--line-2); background: rgba(0,0,0,0.3);
+  color: var(--mute); cursor: text; transition: border-color 0.15s;
+}
+.bk-page-form:focus-within { border-color: var(--accent); }
+.bk-page-form-brk { color: var(--mute-2); }
 
 /* ── Games filter bar ────────────────────────────────────────────────── */
 .bk-filter-bar   { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
@@ -439,19 +443,20 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-search-count  { color: var(--mute); font-size: var(--fz-xs); flex-shrink: 0; }
 
 /* ── Ban form (inline in users table) ───────────────────────────────── */
-.bk-ban-form     { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 180px; }
+.bk-ban-form     { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
 .bk-ban-input    {
-  width: 100%; background: var(--bg-2); border: 1px dashed var(--line-2);
+  width: 100%; background: transparent; border: none; outline: none;
   color: var(--fg); font-family: var(--mono); font-size: var(--fz-xs);
-  padding: 4px 8px; outline: none;
+  padding: 0;
 }
-.bk-ban-input:focus { border-color: var(--accent); }
+.bk-ban-input::placeholder { color: var(--mute-2); }
 .bk-ban-select   {
-  width: 100%; background: var(--bg-2); border: 1px dashed var(--line-2);
-  color: var(--mute); font-family: var(--mono); font-size: var(--fz-xs);
-  padding: 4px 8px; outline: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background: transparent; border: none; outline: none;
+  color: var(--fg-strong); font-family: var(--mono); font-size: var(--fz-xs);
+  padding: 0 2px; cursor: pointer; font-weight: 600;
 }
-.bk-ban-select:focus { border-color: var(--accent); }
+.bk-ban-select:focus { color: var(--accent); }
 .bk-ban-actions  { display: flex; gap: 6px; }
 
 /* ── Mobile top bar ──────────────────────────────────────────────────── */

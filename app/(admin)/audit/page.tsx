@@ -137,23 +137,29 @@ export default async function AuditPage({
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {page > 1 && (
               <Link href="/audit?page=1" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
-                <span className="bk-btn-brk">[</span><span>FIRST</span><span className="bk-btn-brk">]</span>
+                <span className="bk-btn-brk">[</span><span>«</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
             {page > 1 && (
               <Link href={`/audit?page=${page - 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
-                <span className="bk-btn-brk">[</span><span>PREV</span><span className="bk-btn-brk">]</span>
+                <span className="bk-btn-brk">[</span><span>←</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
-            <form action="/audit" method="get" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <input type="number" name="page" defaultValue={page} min={1} max={totalPages} className="bk-page-input" />
-              <button type="submit" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
-                <span className="bk-btn-brk">[</span><span>GO</span><span className="bk-btn-brk">]</span>
-              </button>
+            <form action="/audit" method="get" className="bk-page-form">
+              <span className="bk-page-form-brk">[</span>
+              <input type="text" inputMode="numeric" pattern="[0-9]*" name="page" defaultValue={page} style={{ width: `${String(totalPages).length}ch` }} className="bk-page-input-inline" />
+              <span>/</span>
+              <span style={{ fontWeight: 600, color: "var(--fg-strong)" }}>{totalPages}</span>
+              <span className="bk-page-form-brk">]</span>
             </form>
             {page < totalPages && (
               <Link href={`/audit?page=${page + 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
-                <span className="bk-btn-brk">[</span><span>NEXT</span><span className="bk-btn-brk">]</span>
+                <span className="bk-btn-brk">[</span><span>→</span><span className="bk-btn-brk">]</span>
+              </Link>
+            )}
+            {page < totalPages && (
+              <Link href={`/audit?page=${totalPages}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>»</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
           </div>
