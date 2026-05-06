@@ -18,12 +18,19 @@ async function getGame(id: string) {
         },
       },
       Players: {
-        where: { Users: { Bots: null } },
-        orderBy: { placement: "asc" },
+        orderBy: [
+          { placement: { sort: "asc", nulls: "last" } },
+          { position: "asc" },
+        ],
         select: {
           score: true, finalScore: true, placement: true,
-          isWinner: true, position: true, scorecard: true,
-          Users: { select: { id: true, username: true, email: true, isGuest: true, role: true } },
+          isWinner: true, position: true,
+          Users: {
+            select: {
+              id: true, username: true, email: true, isGuest: true, role: true,
+              Bots: { select: { id: true } },
+            },
+          },
         },
       },
     },
@@ -104,6 +111,10 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   const lobby = game.Lobbies;
   const creator = lobby?.Users;
 
+  const humanPlayers = game.Players.filter((p) => !p.Users.Bots);
+  const botPlayers   = game.Players.filter((p) =>  p.Users.Bots);
+  const isFinished   = game.status === "finished";
+
   const gameInfoRows: [string, React.ReactNode][] = [
     ["game type",    gameTypeLabels[game.gameType] ?? game.gameType],
     ["lobby code",   lobby ? <span style={{ color: "var(--accent)" }}>{lobby.code}</span> : "—"],
@@ -117,7 +128,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
     ["last move",    fmt(game.lastMoveAt)],
     ["duration",     fmtDur(game.durationSeconds)],
     ["turns played", game.currentTurn > 0 ? String(game.currentTurn) : "—"],
-    ["players",      String(game.Players.length)],
+    ["players",      `${humanPlayers.length} human${botPlayers.length > 0 ? ` · ${botPlayers.length} bot` : ""}`],
   ];
 
   const lobbyRows: [string, React.ReactNode][] = lobby ? [
@@ -163,59 +174,68 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
           <table className="bk-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>PLACEMENT</th>
+                <th className="bk-th-num">SEAT</th>
                 <th>PLAYER</th>
                 <th>TYPE</th>
+                {isFinished && <th>PLACEMENT</th>}
                 <th className="bk-th-right">SCORE</th>
                 <th className="bk-th-right">FINAL</th>
               </tr>
             </thead>
             <tbody>
-              {game.Players.map((p) => (
-                <tr key={p.Users.id}>
-                  <td className="bk-td-num" style={{ color: "var(--mute)" }}>{p.position}</td>
-                  <td>
-                    <span style={{ color: "var(--fg-strong)" }}>{placementLabel(p.placement)}</span>
-                    {p.isWinner && (
-                      <> <span className="bk-brk bk-brk--warn">
-                        <span className="bk-brk-l">[</span>WINNER<span className="bk-brk-r">]</span>
-                      </span></>
-                    )}
-                  </td>
-                  <td>
-                    <div className="bk-cell-user-name">
-                      {p.Users.username ?? <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>guest</span>}
-                      {p.Users.role === "admin" && (
-                        <> <span className="bk-brk bk-brk--accent" style={{ fontSize: "10px" }}>
-                          <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
-                        </span></>
+              {humanPlayers.map((p) => {
+                const isWinner = isFinished && p.isWinner && p.placement === 1;
+                return (
+                  <tr key={p.Users.id}>
+                    <td className="bk-td-num" style={{ color: "var(--mute)" }}>
+                      {String(p.position).padStart(2, "0")}
+                    </td>
+                    <td>
+                      <div className="bk-cell-user-name">
+                        {p.Users.username ?? <span style={{ color: "var(--mute-2)", fontStyle: "italic" }}>guest</span>}
+                        {p.Users.role === "admin" && (
+                          <> <span className="bk-brk bk-brk--accent" style={{ fontSize: "10px" }}>
+                            <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
+                          </span></>
+                        )}
+                      </div>
+                      <div className="bk-cell-user-mail">
+                        {p.Users.isGuest ? "guest session" : (p.Users.email ?? "—")}
+                      </div>
+                    </td>
+                    <td>
+                      {p.Users.isGuest ? (
+                        <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>GUEST<span className="bk-brk-r">]</span></span>
+                      ) : (
+                        <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>REG<span className="bk-brk-r">]</span></span>
                       )}
-                    </div>
-                    <div className="bk-cell-user-mail">
-                      {p.Users.isGuest ? "guest session" : (p.Users.email ?? "—")}
-                    </div>
-                  </td>
-                  <td>
-                    {p.Users.isGuest ? (
-                      <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>GUEST<span className="bk-brk-r">]</span></span>
-                    ) : (
-                      <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>REG<span className="bk-brk-r">]</span></span>
+                    </td>
+                    {isFinished && (
+                      <td>
+                        <span style={{ color: "var(--fg-strong)" }}>{placementLabel(p.placement)}</span>
+                        {isWinner && (
+                          <> <span className="bk-brk bk-brk--warn">
+                            <span className="bk-brk-l">[</span>WINNER<span className="bk-brk-r">]</span>
+                          </span></>
+                        )}
+                      </td>
                     )}
-                  </td>
-                  <td className="bk-td-right" style={{ color: "var(--fg)" }}>{p.score}</td>
-                  <td className="bk-td-right" style={{ color: "var(--fg-strong)", fontWeight: 600 }}>
-                    {p.finalScore ?? "—"}
-                  </td>
-                </tr>
-              ))}
+                    <td className="bk-td-right" style={{ color: "var(--fg)" }}>{p.score}</td>
+                    <td className="bk-td-right" style={{ color: "var(--fg-strong)", fontWeight: 600 }}>
+                      {p.finalScore ?? "—"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-          {game.Players.length === 0 && (
+          {humanPlayers.length === 0 && (
             <div className="bk-empty">no player records found</div>
           )}
           <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
-            {game.Players.length} players · bots excluded · guest emails not stored
+            {humanPlayers.length} human player{humanPlayers.length !== 1 ? "s" : ""}
+            {botPlayers.length > 0 && ` · ${botPlayers.length} bot${botPlayers.length !== 1 ? "s" : ""}`}
+            {" · guest emails not stored"}
           </div>
         </div>
       </SectionBox>
