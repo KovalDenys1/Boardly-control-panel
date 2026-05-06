@@ -177,7 +177,8 @@ export default async function DashboardPage() {
             <span style={{ color: 'var(--mute)' }}>
               <span style={{ color: 'var(--accent)', marginRight: 4 }}>█</span>GAMES
             </span>
-            <span style={{ color: 'var(--mute)', textAlign: 'right' }}>CNT</span>
+            <span style={{ color: 'var(--accent)', textAlign: 'right' }}>CNT</span>
+            <span style={{ color: 'var(--line-2)' }}>│</span>
             <span style={{ color: 'var(--mute)' }}>
               <span style={{ color: 'var(--mute-2)', marginRight: 4 }}>█</span>NEW USERS
             </span>
@@ -200,9 +201,10 @@ export default async function DashboardPage() {
                   <span style={{ color: 'var(--accent)', letterSpacing: '-0.5px' }}>{'█'.repeat(gFill)}</span>
                   <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - gFill)}</span>
                 </span>
-                <span className="bk-act-cnt" style={{ color: gc > 0 ? 'var(--fg-strong)' : 'var(--mute-2)' }}>
+                <span className="bk-act-cnt" style={{ color: gc > 0 ? 'var(--accent)' : 'var(--mute-2)' }}>
                   {gc}
                 </span>
+                <span style={{ color: 'var(--line-2)', textAlign: 'center' }}>│</span>
                 <span className="bk-act-bar">
                   <span style={{ color: 'var(--mute)', letterSpacing: '-0.5px' }}>{'█'.repeat(uFill)}</span>
                   <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - uFill)}</span>
@@ -217,6 +219,7 @@ export default async function DashboardPage() {
             <span style={{ color: 'var(--mute)' }}>7d total</span>
             <span />
             <span style={{ color: 'var(--accent)', fontWeight: 600, textAlign: 'right' }}>{gamesTotal7d}</span>
+            <span style={{ color: 'var(--line-2)', textAlign: 'center' }}>│</span>
             <span />
             <span style={{ color: 'var(--fg)', fontWeight: 600, textAlign: 'right' }}>{usersTotal7d}</span>
           </div>

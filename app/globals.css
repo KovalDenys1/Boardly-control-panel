@@ -375,7 +375,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 /* ── Activity chart (dashboard 7d) ──────────────────────────────────── */
 .bk-act-head, .bk-act-row, .bk-act-foot {
   display: grid;
-  grid-template-columns: 100px 1fr 44px 1fr 36px;
+  grid-template-columns: 100px 1fr 44px 12px 1fr 36px;
   align-items: center; gap: 8px 16px;
   padding: 5px 0;
   font-size: var(--fz-xs); letter-spacing: 0.06em;
