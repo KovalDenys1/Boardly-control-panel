@@ -40,7 +40,7 @@ export default function HelpPage() {
         <SectionBox code="man.01" title="Login and logout">
           <p>
             Sign in with the email address and password registered for your admin account.
-            Only users with the admin role can access this panel.
+            Only users with the <span style={{ color: "var(--accent)" }}>admin</span> role can access this panel.
           </p>
           <p>
             To sign out, click{" "}
@@ -51,35 +51,54 @@ export default function HelpPage() {
 
         <SectionBox code="man.02" title="Dashboard — what the numbers mean">
           <ul className="bk-help-ul">
-            <li><span style={{ color: "var(--fg-strong)" }}>REGISTERED USERS</span> — registered accounts, guests not included</li>
-            <li><span style={{ color: "var(--bad)" }}>SUSPENDED ACCOUNTS</span> — banned accounts that require attention</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>REGISTERED USERS</span> — registered accounts, guests excluded</li>
+            <li><span style={{ color: "var(--bad)" }}>SUSPENDED ACCOUNTS</span> — accounts currently banned</li>
             <li><span style={{ color: "var(--accent)" }}>ACTIVE GAMES</span> — game sessions currently in progress</li>
-            <li><span style={{ color: "var(--fg-strong)" }}>TOTAL GAMES</span> — all game sessions ever created</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>TOTAL GAMES</span> — all sessions ever created</li>
           </ul>
-          <p>All figures are fetched directly from the database and are always up to date.</p>
+          <p>
+            Charts show activity for the last 7 days and a breakdown by game type.
+            All figures are fetched live from the database.
+          </p>
         </SectionBox>
 
-        <SectionBox code="man.03" title="User management — suspend and restore">
+        <SectionBox code="man.03" title="Tables — navigation, filtering, sorting">
           <p>
-            Under <span style={{ color: "var(--accent)" }}>users</span> you can see all registered accounts.
-            You can suspend an account if you suspect a rule violation.
+            All tables support <span style={{ color: "var(--fg-strong)" }}>server-side filtering and sorting</span> —
+            results are fetched across all pages, not just the current one.
+          </p>
+          <ul className="bk-help-ul">
+            <li>Click any <span style={{ color: "var(--accent)" }}>column header</span> to sort by that column. Click again to reverse order.</li>
+            <li>Use the <span style={{ color: "var(--fg-strong)" }}>search bar</span> and <span style={{ color: "var(--fg-strong)" }}>dropdowns</span> to filter — press Enter to apply search.</li>
+            <li>The count badge <span style={{ color: "var(--accent)" }}>42 / 200</span> shows matching records vs total.</li>
+            <li>Click any <span style={{ color: "var(--fg-strong)" }}>row</span> to open the detail page.</li>
+          </ul>
+          <p>
+            Pagination controls: <span style={{ color: "var(--accent)" }}>[«]</span> first · <span style={{ color: "var(--accent)" }}>[←]</span> prev ·
+            type a page number and press Enter · <span style={{ color: "var(--accent)" }}>[→]</span> next · <span style={{ color: "var(--accent)" }}>[»]</span> last.
+          </p>
+        </SectionBox>
+
+        <SectionBox code="man.04" title="User management — suspend and restore">
+          <p>
+            Click any user row to open their detail page with full profile, game history, and moderation controls.
           </p>
           <ol className="bk-help-ol">
-            <li>Go to <span style={{ color: "var(--accent)" }}>users</span> in the left sidebar</li>
-            <li>Find the user in the table</li>
+            <li>Open a user from the <span style={{ color: "var(--accent)" }}>users</span> table or their detail page</li>
             <li>Click <span style={{ color: "var(--bad)" }}>[SUSPEND]</span> — enter an optional reason and duration</li>
             <li>Status changes immediately to <span style={{ color: "var(--bad)" }}>[SUSPENDED]</span></li>
+            <li>To restore, click <span style={{ color: "var(--fg-strong)" }}>[UNSUSPEND]</span></li>
           </ol>
-          <p>
-            To restore an account, click <span style={{ color: "var(--fg-strong)" }}>[UNSUSPEND]</span>.
-            All actions are automatically logged with the admin ID and timestamp.
-          </p>
+          <ul className="bk-help-ul">
+            <li>Suspensions can be permanent or time-limited (1 / 3 / 7 / 30 days)</li>
+            <li>Expired bans are lifted automatically on the next page load</li>
+          </ul>
           <div className="bk-help-sig">
             note :: admin accounts cannot be suspended from the interface
           </div>
         </SectionBox>
 
-        <SectionBox code="man.04" title="Game statuses">
+        <SectionBox code="man.05" title="Game statuses">
           <ul className="bk-help-ul">
             <li>
               <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>PLAYING<span className="bk-brk-r">]</span></span>
@@ -87,7 +106,7 @@ export default function HelpPage() {
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>WAITING<span className="bk-brk-r">]</span></span>
-              {" — "}lobby created, waiting for players to start
+              {" — "}lobby created, waiting for players to join or start
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>FINISHED<span className="bk-brk-r">]</span></span>
@@ -95,16 +114,64 @@ export default function HelpPage() {
             </li>
             <li>
               <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>ABANDONED<span className="bk-brk-r">]</span></span>
-              {" — "}players left the lobby before finishing
+              {" — "}players left before finishing
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>CANCELLED<span className="bk-brk-r">]</span></span>
               {" — "}game was cancelled before it started
             </li>
           </ul>
+          <p>
+            Player count on the games table excludes bots. Click a game row to see full session details
+            including all players, rounds, and duration.
+          </p>
         </SectionBox>
 
-        <SectionBox code="man.05" title="Contact and support">
+        <SectionBox code="man.06" title="Monitor — live game sessions">
+          <p>
+            The <span style={{ color: "var(--accent)" }}>monitor</span> page shows all currently active game sessions in real time.
+            The list auto-refreshes every 15 seconds.
+          </p>
+          <ul className="bk-help-ul">
+            <li>Elapsed time updates live while you are on the page</li>
+            <li>Click a session row to open the full game detail page</li>
+            <li>Only sessions with status <span style={{ color: "var(--accent)" }}>[PLAYING]</span> or <span style={{ color: "var(--mute)" }}>[WAITING]</span> appear here</li>
+          </ul>
+        </SectionBox>
+
+        <SectionBox code="man.07" title="Audit log — admin action history">
+          <p>
+            Every moderation action is recorded automatically in the{" "}
+            <span style={{ color: "var(--accent)" }}>audit</span> log with:
+          </p>
+          <ul className="bk-help-ul">
+            <li><span style={{ color: "var(--fg-strong)" }}>action</span> — what was done (e.g. <span style={{ color: "var(--bad)" }}>suspend.user</span>, <span style={{ color: "var(--accent)" }}>unsuspend.user</span>)</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>admin</span> — which admin performed the action</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>target</span> — the affected user or resource (clickable)</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>details</span> — reason provided at the time of action</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>timestamp</span> — exact date and time</li>
+          </ul>
+          <div className="bk-help-sig">
+            note :: audit log entries cannot be edited or deleted
+          </div>
+        </SectionBox>
+
+        <SectionBox code="man.08" title="Feedback — user-submitted reports">
+          <p>
+            The <span style={{ color: "var(--accent)" }}>feedback</span> page collects all messages submitted by users from the Boardly app.
+          </p>
+          <ul className="bk-help-ul">
+            <li>Click a <span style={{ color: "var(--fg-strong)" }}>type badge</span> at the top to filter by category (bug, feature, praise, etc.)</li>
+            <li>Registered users are shown with a link to their profile — click to open</li>
+            <li>Anonymous submissions show the contact email if one was provided</li>
+            <li>The page URL column shows where in the app the feedback was submitted from</li>
+          </ul>
+          <div className="bk-help-sig">
+            note :: feedback entries are read-only and cannot be deleted from this interface
+          </div>
+        </SectionBox>
+
+        <SectionBox code="man.09" title="Contact and support">
           <p>
             Found a bug or have a question?
             Reach out to the developer:

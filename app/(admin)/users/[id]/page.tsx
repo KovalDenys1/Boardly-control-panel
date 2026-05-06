@@ -204,35 +204,49 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           </div>
           <div className="bk-section-body">
             {user.suspended ? (
-              <form action={handleModeration} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <form action={handleModeration} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <input type="hidden" name="action" value="unsuspend" />
-                <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>
-                  suspended{user.banReason ? ` — ${user.banReason}` : ""}
-                  {user.banExpiresAt ? ` · expires ${fmt(user.banExpiresAt)}` : " · permanent"}
+                <span className="bk-brk bk-brk--bad">
+                  <span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span>
                 </span>
-                <button type="submit" className="bk-btn bk-btn--neutral">
+                {user.banReason && (
+                  <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{user.banReason}</span>
+                )}
+                <span style={{ color: "var(--mute-2)", fontSize: "var(--fz-xs)" }}>
+                  {user.banExpiresAt ? `expires ${fmt(user.banExpiresAt)}` : "permanent"}
+                </span>
+                <button type="submit" className="bk-btn bk-btn--neutral" style={{ marginLeft: "auto" }}>
                   <span className="bk-btn-brk">[</span>
                   <span className="bk-btn-label">UNSUSPEND</span>
                   <span className="bk-btn-brk">]</span>
                 </button>
               </form>
             ) : (
-              <form action={handleModeration} className="bk-ban-form">
+              <form action={handleModeration} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <input type="hidden" name="action" value="suspend" />
-                <input
-                  type="text"
-                  name="banReason"
-                  placeholder="reason (optional)"
-                  className="bk-ban-input"
-                  maxLength={200}
-                />
-                <select name="banDuration" className="bk-ban-select">
-                  <option value="0">permanent</option>
-                  <option value="1">1 day</option>
-                  <option value="3">3 days</option>
-                  <option value="7">7 days</option>
-                  <option value="30">30 days</option>
-                </select>
+                <div className="bk-search-bar" style={{ flex: 1, minWidth: 200, marginBottom: 0 }}>
+                  <span className="bk-search-prompt">$</span>
+                  <input
+                    type="text"
+                    name="banReason"
+                    placeholder="reason (optional)"
+                    className="bk-search-input"
+                    maxLength={200}
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="bk-select-wrap">
+                  <span className="bk-select-brk">[</span>
+                  <select name="banDuration" className="bk-filter-select">
+                    <option value="0">permanent</option>
+                    <option value="1">1 day</option>
+                    <option value="3">3 days</option>
+                    <option value="7">7 days</option>
+                    <option value="30">30 days</option>
+                  </select>
+                  <span className="bk-select-brk">]</span>
+                </div>
                 <button type="submit" className="bk-btn bk-btn--bad">
                   <span className="bk-btn-brk">[</span>
                   <span className="bk-btn-label">SUSPEND</span>
