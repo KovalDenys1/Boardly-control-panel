@@ -29,85 +29,85 @@ export default function HelpPage() {
   return (
     <div className="bk-page">
       <div className="bk-page-head">
-        <div className="bk-breadcrumb">man ./hjelp</div>
+        <div className="bk-breadcrumb">man ./help</div>
         <div>
-          <h1 className="bk-page-title">hjelp<span className="bk-stat-cursor">▊</span></h1>
-          <p className="bk-page-sub">// administratordokumentasjon — Boardly Control Panel v1.0</p>
+          <h1 className="bk-page-title">help<span className="bk-stat-cursor">▊</span></h1>
+          <p className="bk-page-sub">// admin documentation — Boardly Control Panel v1.0</p>
         </div>
       </div>
 
       <div className="bk-help-grid">
-        <SectionBox code="man.01" title="Innlogging og utlogging">
+        <SectionBox code="man.01" title="Login and logout">
           <p>
-            Logg inn med e-postadressen og passordet som er registrert for administratorkontoen din.
-            Kun brukere med administratorrolle kan logge inn her.
+            Sign in with the email address and password registered for your admin account.
+            Only users with the admin role can access this panel.
           </p>
           <p>
-            For å logge ut, klikk på{" "}
+            To sign out, click{" "}
             <span style={{ color: "var(--accent)" }}>[SIGN.OUT]</span>{" "}
-            nederst i venstremenyen. Sesjonen avsluttes umiddelbart.
+            at the bottom of the left sidebar. The session ends immediately.
           </p>
         </SectionBox>
 
-        <SectionBox code="man.02" title="Dashboard — hva tallene betyr">
+        <SectionBox code="man.02" title="Dashboard — what the numbers mean">
           <ul className="bk-help-ul">
-            <li><span style={{ color: "var(--fg-strong)" }}>REGISTERED USERS</span> — registrerte kontoer, gjester ikke inkludert</li>
-            <li><span style={{ color: "var(--bad)" }}>SUSPENDED ACCOUNTS</span> — sperrede kontoer som krever oppmerksomhet</li>
-            <li><span style={{ color: "var(--accent)" }}>ACTIVE GAMES</span> — spill som pågår akkurat nå</li>
-            <li><span style={{ color: "var(--fg-strong)" }}>TOTAL GAMES</span> — alle spill som noen gang er opprettet</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>REGISTERED USERS</span> — registered accounts, guests not included</li>
+            <li><span style={{ color: "var(--bad)" }}>SUSPENDED ACCOUNTS</span> — banned accounts that require attention</li>
+            <li><span style={{ color: "var(--accent)" }}>ACTIVE GAMES</span> — game sessions currently in progress</li>
+            <li><span style={{ color: "var(--fg-strong)" }}>TOTAL GAMES</span> — all game sessions ever created</li>
           </ul>
-          <p>Tallene er hentet direkte fra databasen og er alltid oppdaterte.</p>
+          <p>All figures are fetched directly from the database and are always up to date.</p>
         </SectionBox>
 
-        <SectionBox code="man.03" title="Brukeradministrasjon — suspend og gjenopprett">
+        <SectionBox code="man.03" title="User management — suspend and restore">
           <p>
-            Under <span style={{ color: "var(--accent)" }}>users</span> ser du alle registrerte brukere.
-            Du kan suspendere en konto ved mistanke om regelbrudd.
+            Under <span style={{ color: "var(--accent)" }}>users</span> you can see all registered accounts.
+            You can suspend an account if you suspect a rule violation.
           </p>
           <ol className="bk-help-ol">
-            <li>Gå til <span style={{ color: "var(--accent)" }}>users</span> i venstremenyen</li>
-            <li>Finn brukeren i tabellen</li>
-            <li>Klikk <span style={{ color: "var(--bad)" }}>[SUSPEND]</span> til høyre for brukeren</li>
-            <li>Status endres umiddelbart til <span style={{ color: "var(--bad)" }}>[SUSPENDED]</span></li>
+            <li>Go to <span style={{ color: "var(--accent)" }}>users</span> in the left sidebar</li>
+            <li>Find the user in the table</li>
+            <li>Click <span style={{ color: "var(--bad)" }}>[SUSPEND]</span> — enter an optional reason and duration</li>
+            <li>Status changes immediately to <span style={{ color: "var(--bad)" }}>[SUSPENDED]</span></li>
           </ol>
           <p>
-            For å gjenopprette en konto, klikk <span style={{ color: "var(--fg-strong)" }}>[UNSUSPEND]</span>.
-            Alle handlinger logges automatisk med admin-ID og tidsstempel.
+            To restore an account, click <span style={{ color: "var(--fg-strong)" }}>[UNSUSPEND]</span>.
+            All actions are automatically logged with the admin ID and timestamp.
           </p>
           <div className="bk-help-sig">
-            note :: administratorkontoer kan ikke suspenderes fra grensesnittet
+            note :: admin accounts cannot be suspended from the interface
           </div>
         </SectionBox>
 
-        <SectionBox code="man.04" title="Spillstatuser">
+        <SectionBox code="man.04" title="Game statuses">
           <ul className="bk-help-ul">
             <li>
               <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>PLAYING<span className="bk-brk-r">]</span></span>
-              {" — "}spillet pågår akkurat nå
+              {" — "}game is actively in progress
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>WAITING<span className="bk-brk-r">]</span></span>
-              {" — "}lobbyen er opprettet, men spillet har ikke startet
+              {" — "}lobby created, waiting for players to start
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>FINISHED<span className="bk-brk-r">]</span></span>
-              {" — "}spillet er fullført normalt
+              {" — "}game completed normally with a result
             </li>
             <li>
               <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>ABANDONED<span className="bk-brk-r">]</span></span>
-              {" — "}spillere forlot lobbyen uten å fullføre
+              {" — "}players left the lobby before finishing
             </li>
             <li>
               <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>CANCELLED<span className="bk-brk-r">]</span></span>
-              {" — "}spillet ble avbrutt før det startet
+              {" — "}game was cancelled before it started
             </li>
           </ul>
         </SectionBox>
 
-        <SectionBox code="man.05" title="Kontakt og support">
+        <SectionBox code="man.05" title="Contact and support">
           <p>
-            Oppdager du et problem eller har spørsmål?
-            Ta kontakt med utvikleren:
+            Found a bug or have a question?
+            Reach out to the developer:
           </p>
           <div className="bk-help-sig">
             <span style={{ color: "var(--mute)" }}>email  :: </span>
