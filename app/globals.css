@@ -558,7 +558,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
     overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
   .bk-kpi-grid { grid-template-columns: 1fr; }
-  .bk-an-row--2col { grid-template-columns: 1fr; }
+  .bk-an-row--2col { grid-template-columns: minmax(0, 1fr); }
   .bk-hbrow { grid-template-columns: 1fr; gap: 4px; }
   .bk-hbrow-meta { text-align: left; }
   .bk-hbrow-track { margin-bottom: 2px; }
@@ -646,8 +646,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
 
 /* ---------- Analytics row layout ---------- */
 .bk-an-row { margin-bottom: 26px; }
-.bk-an-row--2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.bk-an-row--2col > .bk-section { margin-bottom: 0; }
+.bk-an-row--2col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.bk-an-row--2col > .bk-section { margin-bottom: 0; min-width: 0; }
 
 /* ---------- Section meta inside header ---------- */
 .bk-section-meta {
@@ -853,7 +853,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 /* ---------- Analytics responsive ---------- */
 @media (max-width: 1180px) {
   .bk-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .bk-an-row--2col { grid-template-columns: 1fr; }
+  .bk-an-row--2col { grid-template-columns: minmax(0, 1fr); }
   .bk-hbrow { grid-template-columns: 140px 1fr 160px; gap: 12px; }
 }
 @media (max-width: 720px) {
