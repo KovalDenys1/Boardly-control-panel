@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 
+export const revalidate = 30
+
 function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
