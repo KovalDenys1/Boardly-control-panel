@@ -4,9 +4,17 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+const ASCII = `
+ ██████╗  ██████╗  █████╗ ██████╗ ██╗  ██╗   ██╗
+ ██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██║  ╚██╗ ██╔╝
+ ██████╔╝██║   ██║███████║██████╔╝██║   ╚████╔╝
+ ██╔══██╗██║   ██║██╔══██║██╔══██╗██║    ╚██╔╝
+ ██████╔╝╚██████╔╝██║  ██║██║  ██║███████╗██║
+ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  `.trim();
+
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -14,9 +22,9 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    const form = new FormData(e.currentTarget);
+    const form   = new FormData(e.currentTarget);
     const result = await signIn("credentials", {
-      email: form.get("email"),
+      email:    form.get("email"),
       password: form.get("password"),
       redirect: false,
     });
@@ -24,66 +32,90 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid credentials or insufficient permissions.");
+      setError("ACCESS DENIED — invalid credentials or insufficient permissions.");
     } else {
       router.push("/dashboard");
     }
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest mb-1">Boardly</p>
-          <h1 className="text-white text-2xl font-semibold">Control Panel</h1>
-          <p className="text-zinc-500 text-sm mt-2">Admin access only</p>
+    <div className="bk-login-root">
+      <div className="bk-login-bg" aria-hidden="true" />
+      <div className="bk-scanlines" aria-hidden="true" />
+
+      <div className="bk-login-window">
+        <div className="bk-login-titlebar">
+          <span>boardly@control-panel:~</span>
+          <span className="bk-login-titlebar-name">ssh admin@boardly.online</span>
+          <span className="bk-login-titlebar-fill" style={{ color: "var(--mute-2)" }}>
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          </span>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-zinc-400 text-sm mb-1.5">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              className="w-full bg-zinc-950 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
-              placeholder="admin@boardly.online"
-            />
+        <div className="bk-login-body">
+          <pre className="bk-ascii">{ASCII}</pre>
+
+          <div className="bk-login-line">
+            <span style={{ color: "var(--mute)" }}>system  </span>
+            <span style={{ color: "var(--fg)" }}>Boardly Control Panel v2.6</span>
+          </div>
+          <div className="bk-login-line">
+            <span style={{ color: "var(--mute)" }}>access  </span>
+            <span style={{ color: "var(--accent)" }}>administrators only</span>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-zinc-400 text-sm mb-1.5">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="w-full bg-zinc-950 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
+          <form className="bk-login-form" onSubmit={handleSubmit}>
+            <div className="bk-field">
+              <label htmlFor="email" className="bk-field-prompt">email ::</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                className="bk-input"
+                placeholder="admin@boardly.online"
+              />
+            </div>
 
-          {error && (
-            <p className="text-red-400 text-sm bg-red-950/50 border border-red-900 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
+            <div className="bk-field">
+              <label htmlFor="password" className="bk-field-prompt">passwd ::</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                className="bk-input"
+                placeholder="••••••••"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-white text-zinc-950 font-medium rounded-lg py-2.5 text-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+            {error && (
+              <div className="bk-login-err">{error}</div>
+            )}
+
+            <div className="bk-login-actions">
+              {loading ? (
+                <div className="bk-login-loading">
+                  AUTHENTICATING<span className="bk-cursor">...</span>
+                </div>
+              ) : (
+                <button type="submit" className="bk-btn bk-btn--accent bk-btn--block">
+                  <span className="bk-btn-brk">[</span>
+                  <span className="bk-btn-label">AUTHENTICATE</span>
+                  <span className="bk-btn-brk">]</span>
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        <div className="bk-login-footer">
+          <span style={{ color: "var(--mute-2)" }}>
+            unauthorized access is prohibited and will be logged
+          </span>
+        </div>
       </div>
     </div>
   );

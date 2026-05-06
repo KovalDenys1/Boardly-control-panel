@@ -6,141 +6,133 @@ async function getGames() {
     take: 50,
     orderBy: { createdAt: "desc" },
     select: {
-      id: true,
-      gameType: true,
-      status: true,
-      createdAt: true,
-      startedAt: true,
-      endedAt: true,
-      durationSeconds: true,
+      id: true, gameType: true, status: true,
+      createdAt: true, startedAt: true, endedAt: true, durationSeconds: true,
       Players: { where: { Users: { Bots: null } }, select: { id: true } },
     },
   });
 }
 
 const gameTypeLabels: Record<string, string> = {
-  yahtzee: "Yahtzee",
-  tic_tac_toe: "Tic-Tac-Toe",
-  rock_paper_scissors: "Rock Paper Scissors",
-  guess_the_spy: "Guess the Spy",
-  memory: "Memory",
-  telephone_doodle: "Telephone Doodle",
-  sketch_and_guess: "Sketch & Guess",
-  liars_party: "Liars Party",
-  fake_artist: "Fake Artist",
-  other: "Other",
+  yahtzee: "Yahtzee", tic_tac_toe: "Tic-Tac-Toe",
+  rock_paper_scissors: "Rock Paper Scissors", guess_the_spy: "Guess the Spy",
+  memory: "Memory", telephone_doodle: "Telephone Doodle",
+  sketch_and_guess: "Sketch & Guess", liars_party: "Liars Party",
+  fake_artist: "Fake Artist", other: "Other",
 };
 
-const statusStyles: Record<string, string> = {
-  playing: "bg-green-950 text-green-400 border-green-900",
-  waiting: "bg-zinc-800 text-zinc-400 border-zinc-700",
-  finished: "bg-zinc-900 text-zinc-500 border-zinc-800",
-  abandoned: "bg-red-950 text-red-400 border-red-900",
-  cancelled: "bg-zinc-900 text-zinc-600 border-zinc-800",
-};
-
-function formatDuration(seconds: number | null) {
-  if (!seconds) return "—";
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
-
-function formatDate(date: Date | null) {
-  if (!date) return "—";
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function formatDateTime(date: Date | null) {
-  if (!date) return "—";
-  const d = date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-  const t = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+function statusBadge(status: string) {
+  const map: Record<string, { tone: string; label: string }> = {
+    playing:   { tone: "ok",   label: "PLAYING" },
+    waiting:   { tone: "mute", label: "WAITING" },
+    finished:  { tone: "mute", label: "FINISHED" },
+    abandoned: { tone: "bad",  label: "ABANDONED" },
+    cancelled: { tone: "mute", label: "CANCELLED" },
+  };
+  const { tone, label } = map[status] ?? { tone: "mute", label: status.toUpperCase() };
   return (
-    <span>
-      <span className="text-zinc-300">{t}</span>
-      <span className="text-zinc-600 ml-1">{d}</span>
+    <span className={`bk-brk bk-brk--${tone}`}>
+      <span className="bk-brk-l">[</span>{label}<span className="bk-brk-r">]</span>
     </span>
   );
+}
+
+function fmtDate(d: Date | null) {
+  if (!d) return <span style={{ color: "var(--mute-2)" }}>—</span>;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function fmtDateTime(d: Date | null) {
+  if (!d) return <span style={{ color: "var(--mute-2)" }}>—</span>;
+  const t = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const date = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return (
+    <span>
+      <span style={{ color: "var(--fg-strong)" }}>{t}</span>
+      <span style={{ color: "var(--mute)", marginLeft: 4 }}>{date}</span>
+    </span>
+  );
+}
+
+function fmtDur(s: number | null) {
+  if (!s) return <span style={{ color: "var(--mute-2)" }}>—</span>;
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return <>{m > 0 ? `${m}m ${sec}s` : `${sec}s`}</>;
 }
 
 export default async function GamesPage() {
   const games = await getGames();
-
   const counts = {
-    playing: games.filter((g) => g.status === "playing").length,
-    finished: games.filter((g) => g.status === "finished").length,
+    playing:   games.filter((g) => g.status === "playing").length,
+    finished:  games.filter((g) => g.status === "finished").length,
     abandoned: games.filter((g) => g.status === "abandoned").length,
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center gap-6">
-        <div>
-          <h1 className="text-xl font-semibold text-white">Games</h1>
-          <p className="text-zinc-500 text-sm mt-1">Last 50 games</p>
-        </div>
-        <div className="flex gap-3 ml-auto">
-          <Pill label="Active" count={counts.playing} color="green" />
-          <Pill label="Finished" count={counts.finished} color="zinc" />
-          <Pill label="Abandoned" count={counts.abandoned} color="red" />
+    <div className="bk-page">
+      <div className="bk-page-head">
+        <div className="bk-breadcrumb">cat ./games.log</div>
+        <div className="bk-page-title-row">
+          <div>
+            <h1 className="bk-page-title">games<span className="bk-stat-cursor">▊</span></h1>
+            <p className="bk-page-sub">// last 50 sessions — click row for details</p>
+          </div>
+          <div className="bk-pill-row">
+            <span className="bk-pill bk-pill--ok">
+              <span className="bk-pill-count">{counts.playing}</span>
+              <span className="bk-pill-sep">·</span><span>ACTIVE</span>
+            </span>
+            <span className="bk-pill bk-pill--mute">
+              <span className="bk-pill-count">{counts.finished}</span>
+              <span className="bk-pill-sep">·</span><span>FINISHED</span>
+            </span>
+            <span className="bk-pill bk-pill--bad">
+              <span className="bk-pill-count">{counts.abandoned}</span>
+              <span className="bk-pill-sep">·</span><span>ABANDONED</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bk-table-wrap">
+        <table className="bk-table">
           <thead>
-            <tr className="border-b border-zinc-800">
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Game</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Status</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Players</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Created</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Started</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Ended</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Duration</th>
+            <tr>
+              <th className="bk-th-num">#</th>
+              <th>GAME TYPE</th>
+              <th>STATUS</th>
+              <th>PLAYERS</th>
+              <th>CREATED</th>
+              <th>STARTED</th>
+              <th>ENDED</th>
+              <th className="bk-th-right">DURATION</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/50">
-            {games.map((game) => (
-              <tr key={game.id} className="hover:bg-zinc-800/30 transition-colors cursor-pointer group">
-                <td className="px-5 py-3.5">
-                  <Link href={`/games/${game.id}`} className="text-white group-hover:text-zinc-300 transition-colors">
+          <tbody>
+            {games.map((game, i) => (
+              <tr key={game.id} style={{ cursor: "pointer" }}>
+                <td className="bk-td-num" style={{ color: "var(--mute)" }}>{String(i + 1).padStart(2, "0")}</td>
+                <td>
+                  <Link href={`/games/${game.id}`} style={{ color: "var(--fg-strong)", textDecoration: "none", fontWeight: 600, display: "block" }}>
                     {gameTypeLabels[game.gameType] ?? game.gameType}
                   </Link>
                 </td>
-                <td className="px-5 py-3.5">
-                  <Link href={`/games/${game.id}`} className="block">
-                    <span className={`text-xs border px-2 py-0.5 rounded-full ${statusStyles[game.status] ?? statusStyles.finished}`}>
-                      {game.status}
-                    </span>
-                  </Link>
-                </td>
-                <td className="px-5 py-3.5 text-zinc-400"><Link href={`/games/${game.id}`} className="block">{game.Players.length}</Link></td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDate(game.createdAt)}</Link></td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDateTime(game.startedAt)}</Link></td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDateTime(game.endedAt)}</Link></td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs"><Link href={`/games/${game.id}`} className="block">{formatDuration(game.durationSeconds)}</Link></td>
+                <td><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{statusBadge(game.status)}</Link></td>
+                <td style={{ color: "var(--fg)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{game.Players.length}</Link></td>
+                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDate(game.createdAt)}</Link></td>
+                <td style={{ fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDateTime(game.startedAt)}</Link></td>
+                <td style={{ fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDateTime(game.endedAt)}</Link></td>
+                <td className="bk-td-right" style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDur(game.durationSeconds)}</Link></td>
               </tr>
             ))}
           </tbody>
         </table>
-
-        {games.length === 0 && (
-          <div className="px-5 py-12 text-center text-zinc-600">No games found.</div>
-        )}
+        {games.length === 0 && <div className="bk-empty">no games found</div>}
+        <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
+          {games.length} records · bots excluded from player count
+        </div>
       </div>
     </div>
-  );
-}
-
-function Pill({ label, count, color }: { label: string; count: number; color: "green" | "red" | "zinc" }) {
-  const styles = {
-    green: "bg-green-950 text-green-400 border-green-900",
-    red: "bg-red-950 text-red-400 border-red-900",
-    zinc: "bg-zinc-800 text-zinc-400 border-zinc-700",
-  };
-  return (
-    <span className={`text-xs border px-2.5 py-1 rounded-full ${styles[color]}`}>
-      {count} {label}
-    </span>
   );
 }

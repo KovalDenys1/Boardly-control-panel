@@ -5,41 +5,31 @@ import { revalidatePath } from "next/cache";
 async function getUsers() {
   return prisma.users.findMany({
     where: { isGuest: false },
-    select: {
-      id: true,
-      email: true,
-      username: true,
-      role: true,
-      suspended: true,
-      createdAt: true,
-      lastActiveAt: true,
-    },
+    select: { id: true, email: true, username: true, role: true, suspended: true, createdAt: true, lastActiveAt: true },
     orderBy: { createdAt: "desc" },
   });
 }
 
 async function toggleSuspend(userId: string, suspend: boolean, adminId: string) {
-  await prisma.users.update({
-    where: { id: userId },
-    data: { suspended: suspend },
-  });
-
+  await prisma.users.update({ where: { id: userId }, data: { suspended: suspend } });
   await prisma.adminAuditLogs.create({
     data: {
-      id: crypto.randomUUID(),
-      adminId,
+      id: crypto.randomUUID(), adminId,
       action: suspend ? "suspend_user" : "unsuspend_user",
-      targetType: "user",
-      targetId: userId,
+      targetType: "user", targetId: userId,
       details: { suspended: suspend },
     },
   });
 }
 
+function fmt(d: Date) {
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
 export default async function UsersPage() {
   const session = await auth();
   const adminId = session!.user!.id!;
-  const users = await getUsers();
+  const users   = await getUsers();
 
   async function handleSuspend(formData: FormData) {
     "use server";
@@ -52,78 +42,89 @@ export default async function UsersPage() {
   const suspended = users.filter((u) => u.suspended).length;
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-white">Users</h1>
-          <p className="text-zinc-500 text-sm mt-1">
-            {users.length} registered &middot;{" "}
-            <span className={suspended > 0 ? "text-red-400" : "text-zinc-500"}>
-              {suspended} suspended
+    <div className="bk-page">
+      <div className="bk-page-head">
+        <div className="bk-breadcrumb">cat ./users.log</div>
+        <div className="bk-page-title-row">
+          <div>
+            <h1 className="bk-page-title">users<span className="bk-stat-cursor">▊</span></h1>
+            <p className="bk-page-sub">
+              // {users.length} registered
+              {suspended > 0 && (
+                <> · <span style={{ color: "var(--bad)" }}>{suspended} suspended</span></>
+              )}
+            </p>
+          </div>
+          <div className="bk-pill-row">
+            <span className={`bk-pill bk-pill--${suspended > 0 ? "bad" : "mute"}`}>
+              <span className="bk-pill-count">{suspended}</span>
+              <span className="bk-pill-sep">·</span>
+              <span>SUSPENDED</span>
             </span>
-          </p>
+            <span className="bk-pill bk-pill--mute">
+              <span className="bk-pill-count">{users.length}</span>
+              <span className="bk-pill-sep">·</span>
+              <span>TOTAL</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bk-table-wrap">
+        <table className="bk-table">
           <thead>
-            <tr className="border-b border-zinc-800">
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">User</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Role</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Joined</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Last active</th>
-              <th className="text-left text-zinc-500 font-medium px-5 py-3">Status</th>
-              <th className="px-5 py-3" />
+            <tr>
+              <th className="bk-th-num">#</th>
+              <th>USER</th>
+              <th>ROLE</th>
+              <th>JOINED</th>
+              <th>LAST ACTIVE</th>
+              <th>STATUS</th>
+              <th className="bk-th-right">ACTION</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/50">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-zinc-800/30 transition-colors">
-                <td className="px-5 py-3.5">
-                  <div className="text-white font-medium">{user.username ?? "—"}</div>
-                  <div className="text-zinc-500 text-xs mt-0.5">{user.email}</div>
+          <tbody>
+            {users.map((user, i) => (
+              <tr key={user.id}>
+                <td className="bk-td-num" style={{ color: "var(--mute)" }}>{String(i + 1).padStart(2, "0")}</td>
+                <td>
+                  <div className="bk-cell-user-name">{user.username ?? "—"}</div>
+                  <div className="bk-cell-user-mail">{user.email}</div>
                 </td>
-                <td className="px-5 py-3.5">
+                <td>
                   {user.role === "admin" ? (
-                    <span className="text-xs bg-indigo-950 text-indigo-400 border border-indigo-900 px-2 py-0.5 rounded-full">
-                      admin
+                    <span className="bk-brk bk-brk--accent">
+                      <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
                     </span>
                   ) : (
-                    <span className="text-zinc-500 text-xs">user</span>
+                    <span className="bk-mute">user</span>
                   )}
                 </td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">
-                  {user.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                </td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">
-                  {user.lastActiveAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                </td>
-                <td className="px-5 py-3.5">
+                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.createdAt)}</td>
+                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.lastActiveAt)}</td>
+                <td>
                   {user.suspended ? (
-                    <span className="text-xs bg-red-950 text-red-400 border border-red-900 px-2 py-0.5 rounded-full">
-                      suspended
+                    <span className="bk-brk bk-brk--bad">
+                      <span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span>
                     </span>
                   ) : (
-                    <span className="text-xs bg-green-950 text-green-400 border border-green-900 px-2 py-0.5 rounded-full">
-                      active
+                    <span className="bk-brk bk-brk--ok">
+                      <span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span>
                     </span>
                   )}
                 </td>
-                <td className="px-5 py-3.5 text-right">
+                <td className="bk-td-right">
                   {user.role !== "admin" && (
                     <form action={handleSuspend}>
                       <input type="hidden" name="userId" value={user.id} />
                       <input type="hidden" name="action" value={user.suspended ? "unsuspend" : "suspend"} />
                       <button
                         type="submit"
-                        className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                          user.suspended
-                            ? "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
-                            : "border-red-900 text-red-400 hover:bg-red-950 hover:border-red-800"
-                        }`}
+                        className={`bk-btn ${user.suspended ? "bk-btn--neutral" : "bk-btn--bad"}`}
                       >
-                        {user.suspended ? "Unsuspend" : "Suspend"}
+                        <span className="bk-btn-brk">[</span>
+                        <span className="bk-btn-label">{user.suspended ? "UNSUSPEND" : "SUSPEND"}</span>
+                        <span className="bk-btn-brk">]</span>
                       </button>
                     </form>
                   )}
@@ -132,10 +133,12 @@ export default async function UsersPage() {
             ))}
           </tbody>
         </table>
-
         {users.length === 0 && (
-          <div className="px-5 py-12 text-center text-zinc-600">No registered users found.</div>
+          <div className="bk-empty">no users found</div>
         )}
+        <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
+          {users.length} records · all actions logged to audit trail
+        </div>
       </div>
     </div>
   );
