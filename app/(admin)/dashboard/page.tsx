@@ -11,8 +11,10 @@ function buildDays() {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = dayKey(d);
-    const label = d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
-    days.push({ key, label });
+    const wd  = d.toLocaleDateString('en-GB', { weekday: 'short' });
+    const day = String(d.getDate()).padStart(2, '0');
+    const mon = d.toLocaleDateString('en-GB', { month: 'short' });
+    days.push({ key, label: `${wd} ${day} ${mon}` });
   }
   return days;
 }
@@ -170,52 +172,53 @@ export default async function DashboardPage() {
           <span className="bk-section-bracket">─┐</span>
         </div>
         <div className="bk-section-body">
-          <div className="bk-activity-legend">
-            <span style={{ color: 'var(--mute)', fontSize: 'var(--fz-xs)', letterSpacing: '0.1em' }}>
-              <span style={{ color: 'var(--accent)' }}>█</span> games &nbsp;
-              <span style={{ color: 'var(--mute)' }}>█</span> users &nbsp;·&nbsp;
-              last 7 days &nbsp;·&nbsp;
-              <span style={{ color: 'var(--fg-strong)' }}>{gamesTotal7d}</span> games &nbsp;
-              <span style={{ color: 'var(--mute)' }}>/</span> &nbsp;
-              <span style={{ color: 'var(--fg-strong)' }}>{usersTotal7d}</span> new users
+          <div className="bk-act-head">
+            <span style={{ color: 'var(--mute)' }}>DATE</span>
+            <span style={{ color: 'var(--mute)' }}>
+              <span style={{ color: 'var(--accent)', marginRight: 4 }}>█</span>GAMES
             </span>
+            <span style={{ color: 'var(--mute)', textAlign: 'right' }}>CNT</span>
+            <span style={{ color: 'var(--mute)' }}>
+              <span style={{ color: 'var(--mute-2)', marginRight: 4 }}>█</span>NEW USERS
+            </span>
+            <span style={{ color: 'var(--mute)', textAlign: 'right' }}>CNT</span>
           </div>
-          <div className="bk-activity-grid">
-            {days.map((d) => {
-              const gc = gamesByDay[d.key] ?? 0;
-              const uc = usersByDay[d.key] ?? 0;
-              const gPct = Math.round((gc / maxGames) * 100);
-              const uPct = Math.round((uc / maxUsers) * 100);
-              const isToday = d.key === todayKey;
-              return (
-                <div key={d.key} className="bk-activity-col">
-                  <div className="bk-activity-bars">
-                    <div className="bk-activity-bar-wrap">
-                      <div
-                        className="bk-activity-bar bk-activity-bar--games"
-                        style={{ height: `${Math.max(gPct, 4)}%`, opacity: isToday ? 1 : 0.75 }}
-                      />
-                    </div>
-                    <div className="bk-activity-bar-wrap">
-                      <div
-                        className="bk-activity-bar bk-activity-bar--users"
-                        style={{ height: `${Math.max(uPct, 4)}%`, opacity: isToday ? 1 : 0.75 }}
-                      />
-                    </div>
-                  </div>
-                  <div className="bk-activity-counts">
-                    <span style={{ color: 'var(--accent)' }}>{gc}</span>
-                    <span style={{ color: 'var(--mute-2)' }}>/</span>
-                    <span style={{ color: 'var(--mute)' }}>{uc}</span>
-                  </div>
-                  <div className={`bk-activity-label${isToday ? ' bk-activity-label--today' : ''}`}>
-                    {d.label.split(' ').map((part, i) => (
-                      <span key={i} style={{ display: 'block', lineHeight: 1.3 }}>{part}</span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+          {days.map((d) => {
+            const gc = gamesByDay[d.key] ?? 0;
+            const uc = usersByDay[d.key] ?? 0;
+            const BAR = 24;
+            const gFill = maxGames > 0 ? Math.round((gc / maxGames) * BAR) : 0;
+            const uFill = maxUsers > 0 ? Math.round((uc / maxUsers) * BAR) : 0;
+            const isToday = d.key === todayKey;
+            return (
+              <div key={d.key} className={`bk-act-row${isToday ? ' bk-act-row--today' : ''}`}>
+                <span className="bk-act-date">
+                  {isToday && <span style={{ color: 'var(--accent)', marginRight: 4 }}>▶</span>}
+                  {d.label}
+                </span>
+                <span className="bk-act-bar">
+                  <span style={{ color: 'var(--accent)', letterSpacing: '-0.5px' }}>{'█'.repeat(gFill)}</span>
+                  <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - gFill)}</span>
+                </span>
+                <span className="bk-act-cnt" style={{ color: gc > 0 ? 'var(--fg-strong)' : 'var(--mute-2)' }}>
+                  {gc}
+                </span>
+                <span className="bk-act-bar">
+                  <span style={{ color: 'var(--mute)', letterSpacing: '-0.5px' }}>{'█'.repeat(uFill)}</span>
+                  <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - uFill)}</span>
+                </span>
+                <span className="bk-act-cnt" style={{ color: uc > 0 ? 'var(--fg)' : 'var(--mute-2)' }}>
+                  {uc}
+                </span>
+              </div>
+            );
+          })}
+          <div className="bk-act-foot">
+            <span style={{ color: 'var(--mute)' }}>7d total</span>
+            <span />
+            <span style={{ color: 'var(--accent)', fontWeight: 600, textAlign: 'right' }}>{gamesTotal7d}</span>
+            <span />
+            <span style={{ color: 'var(--fg)', fontWeight: 600, textAlign: 'right' }}>{usersTotal7d}</span>
           </div>
         </div>
         <div className="bk-section-foot">

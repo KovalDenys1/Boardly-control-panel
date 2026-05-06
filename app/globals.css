@@ -373,34 +373,27 @@ input, button, textarea, select { font: inherit; color: inherit; }
 }
 
 /* ── Activity chart (dashboard 7d) ──────────────────────────────────── */
-.bk-activity-legend { margin-bottom: 16px; }
-.bk-activity-grid {
-  display: flex; align-items: flex-end; gap: 10px;
-  height: 160px; padding-bottom: 0;
+.bk-act-head, .bk-act-row, .bk-act-foot {
+  display: grid;
+  grid-template-columns: 100px 1fr 44px 1fr 36px;
+  align-items: center; gap: 8px 16px;
+  padding: 5px 0;
+  font-size: var(--fz-xs); letter-spacing: 0.06em;
 }
-.bk-activity-col {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+.bk-act-head {
+  color: var(--mute); font-weight: 600;
+  border-bottom: 1px dashed var(--line-2); margin-bottom: 4px; padding-bottom: 8px;
 }
-.bk-activity-bars {
-  flex: 1; width: 100%; display: flex; align-items: flex-end; gap: 3px;
+.bk-act-foot {
+  border-top: 1px dashed var(--line-2); margin-top: 4px; padding-top: 8px;
+  color: var(--mute); font-weight: 600;
 }
-.bk-activity-bar-wrap {
-  flex: 1; height: 100%; display: flex; align-items: flex-end;
-}
-.bk-activity-bar {
-  width: 100%; border-radius: 1px; transition: height 0.3s ease;
-}
-.bk-activity-bar--games { background: var(--accent); box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3); }
-.bk-activity-bar--users { background: var(--mute); }
-.bk-activity-counts {
-  display: flex; gap: 3px; font-size: var(--fz-xs);
-  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
-}
-.bk-activity-label {
-  text-align: center; font-size: 9px; color: var(--mute-2);
-  letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.2;
-}
-.bk-activity-label--today { color: var(--accent); }
+.bk-act-row { border-bottom: 1px dashed var(--line); }
+.bk-act-row:last-of-type { border-bottom: 0; }
+.bk-act-row--today .bk-act-date { color: var(--accent); }
+.bk-act-date { color: var(--fg); white-space: nowrap; }
+.bk-act-bar  { font-size: 12px; overflow: hidden; white-space: nowrap; }
+.bk-act-cnt  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* ── Games filter bar ────────────────────────────────────────────────── */
 .bk-filter-bar   { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
