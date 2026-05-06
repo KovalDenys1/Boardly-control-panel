@@ -159,6 +159,23 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
+      {game.status === "abandoned" && (
+        <div style={{
+          border: "1px dashed rgba(255,59,59,0.4)", background: "rgba(255,59,59,0.05)",
+          color: "var(--bad)", padding: "10px 16px", fontSize: "var(--fz-xs)",
+          letterSpacing: "0.04em", marginBottom: 20,
+        }}>
+          {"// warning :: player data may be incomplete for abandoned games — "}
+          <a
+            href="https://github.com/KovalDenys1/Boardly/issues/444"
+            target="_blank" rel="noopener noreferrer"
+            style={{ color: "var(--bad)", textDecoration: "underline" }}
+          >
+            see boardly#444
+          </a>
+        </div>
+      )}
+
       <SectionBox title="game_info">
         <InfoGrid rows={gameInfoRows} />
       </SectionBox>
