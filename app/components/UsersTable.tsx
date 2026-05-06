@@ -12,16 +12,10 @@ export type UserRow = {
   lastActiveAt: string;
 };
 
-type SortKey = "index" | "username" | "role" | "createdAt" | "lastActiveAt" | "status" | "online";
+type SortKey = "index" | "username" | "role" | "createdAt" | "lastActiveAt" | "status";
 type SortDir = "asc" | "desc";
 
 type IndexedUserRow = UserRow & { _idx: number };
-
-const ONLINE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
-
-function isOnline(iso: string) {
-  return Date.now() - new Date(iso).getTime() < ONLINE_THRESHOLD_MS;
-}
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -36,7 +30,6 @@ function compare(a: IndexedUserRow, b: IndexedUserRow, key: SortKey, dir: SortDi
     case "createdAt":  va = new Date(a.createdAt).getTime();     vb = new Date(b.createdAt).getTime();     break;
     case "lastActiveAt": va = new Date(a.lastActiveAt).getTime(); vb = new Date(b.lastActiveAt).getTime(); break;
     case "status":     va = a.suspended ? 1 : 0; vb = b.suspended ? 1 : 0; break;
-    case "online":     va = isOnline(a.lastActiveAt) ? 1 : 0; vb = isOnline(b.lastActiveAt) ? 1 : 0; break;
   }
   if (va < vb) return dir === "asc" ? -1 : 1;
   if (va > vb) return dir === "asc" ? 1 : -1;
@@ -92,7 +85,6 @@ export function UsersTable({
           <Th col="role">ROLE</Th>
           <Th col="createdAt">JOINED</Th>
           <Th col="lastActiveAt">LAST ACTIVE</Th>
-          <Th col="online">ONLINE</Th>
           <Th col="status">STATUS</Th>
           <th className="bk-th-right">ACTION</th>
         </tr>
@@ -116,13 +108,6 @@ export function UsersTable({
             </td>
             <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.createdAt)}</td>
             <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.lastActiveAt)}</td>
-            <td>
-              {isOnline(user.lastActiveAt) ? (
-                <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ONLINE<span className="bk-brk-r">]</span></span>
-              ) : (
-                <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>OFFLINE<span className="bk-brk-r">]</span></span>
-              )}
-            </td>
             <td>
               {user.suspended ? (
                 <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span></span>
