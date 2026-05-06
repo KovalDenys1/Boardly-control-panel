@@ -12,24 +12,25 @@ export type UserRow = {
   lastActiveAt: string;
 };
 
-type SortKey = "index" | "username" | "role" | "createdAt" | "lastActiveAt" | "status";
+type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status";
 type SortDir = "asc" | "desc";
 
-type IndexedUserRow = UserRow & { _idx: number };
+const ONLINE_MS = 10 * 60 * 1000;
+function isOnline(iso: string) { return Date.now() - new Date(iso).getTime() < ONLINE_MS; }
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function compare(a: IndexedUserRow, b: IndexedUserRow, key: SortKey, dir: SortDir): number {
+function compare(a: UserRow, b: UserRow, key: SortKey, dir: SortDir): number {
   let va: string | number, vb: string | number;
   switch (key) {
-    case "index":      va = a._idx; vb = b._idx; break;
-    case "username":   va = (a.username ?? a.email).toLowerCase(); vb = (b.username ?? b.email).toLowerCase(); break;
-    case "role":       va = a.role; vb = b.role; break;
-    case "createdAt":  va = new Date(a.createdAt).getTime();     vb = new Date(b.createdAt).getTime();     break;
-    case "lastActiveAt": va = new Date(a.lastActiveAt).getTime(); vb = new Date(b.lastActiveAt).getTime(); break;
-    case "status":     va = a.suspended ? 1 : 0; vb = b.suspended ? 1 : 0; break;
+    case "username":     va = (a.username ?? a.email).toLowerCase(); vb = (b.username ?? b.email).toLowerCase(); break;
+    case "role":         va = a.role; vb = b.role; break;
+    case "createdAt":    va = new Date(a.createdAt).getTime();      vb = new Date(b.createdAt).getTime();      break;
+    case "lastActiveAt": va = new Date(a.lastActiveAt).getTime();   vb = new Date(b.lastActiveAt).getTime();   break;
+    case "online":       va = isOnline(a.lastActiveAt) ? 1 : 0;     vb = isOnline(b.lastActiveAt) ? 1 : 0;    break;
+    case "status":       va = a.suspended ? 1 : 0;                  vb = b.suspended ? 1 : 0;                 break;
   }
   if (va < vb) return dir === "asc" ? -1 : 1;
   if (va > vb) return dir === "asc" ? 1 : -1;
@@ -51,14 +52,9 @@ export function UsersTable({
     else { setSortKey(key); setSortDir("asc"); }
   }
 
-  const indexed = useMemo<IndexedUserRow[]>(
-    () => users.map((u, i) => ({ ...u, _idx: i })),
-    [users],
-  );
-
   const sorted = useMemo(
-    () => sortKey ? [...indexed].sort((a, b) => compare(a, b, sortKey, sortDir)) : indexed,
-    [indexed, sortKey, sortDir],
+    () => sortKey ? [...users].sort((a, b) => compare(a, b, sortKey, sortDir)) : users,
+    [users, sortKey, sortDir],
   );
 
   function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string }) {
@@ -80,11 +76,12 @@ export function UsersTable({
     <table className="bk-table">
       <thead>
         <tr>
-          <Th col="index" className="bk-th-num">#</Th>
+          <th className="bk-th-num">#</th>
           <Th col="username">USER</Th>
           <Th col="role">ROLE</Th>
           <Th col="createdAt">JOINED</Th>
           <Th col="lastActiveAt">LAST ACTIVE</Th>
+          <Th col="online">ONLINE</Th>
           <Th col="status">STATUS</Th>
           <th className="bk-th-right">ACTION</th>
         </tr>
@@ -108,6 +105,13 @@ export function UsersTable({
             </td>
             <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.createdAt)}</td>
             <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.lastActiveAt)}</td>
+            <td>
+              {isOnline(user.lastActiveAt) ? (
+                <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ONLINE<span className="bk-brk-r">]</span></span>
+              ) : (
+                <span className="bk-brk bk-brk--mute"><span className="bk-brk-l">[</span>OFFLINE<span className="bk-brk-r">]</span></span>
+              )}
+            </td>
             <td>
               {user.suspended ? (
                 <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>SUSPENDED<span className="bk-brk-r">]</span></span>

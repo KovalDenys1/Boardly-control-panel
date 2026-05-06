@@ -22,9 +22,8 @@ const gameTypeLabels: Record<string, string> = {
   fake_artist: "Fake Artist", other: "Other",
 };
 
-type SortKey = "index" | "gameType" | "status" | "playerCount" | "createdAt" | "startedAt" | "endedAt" | "durationSeconds";
+type SortKey = "gameType" | "status" | "playerCount" | "createdAt" | "startedAt" | "endedAt" | "durationSeconds";
 type SortDir = "asc" | "desc";
-type IndexedGameRow = GameRow & { _idx: number };
 
 function statusBadge(status: string) {
   const map: Record<string, { tone: string; label: string }> = {
@@ -70,10 +69,9 @@ function numVal(v: string | null): number {
   return v ? new Date(v).getTime() : -1;
 }
 
-function compare(a: IndexedGameRow, b: IndexedGameRow, key: SortKey, dir: SortDir): number {
+function compare(a: GameRow, b: GameRow, key: SortKey, dir: SortDir): number {
   let va: string | number, vb: string | number;
   switch (key) {
-    case "index":           va = a._idx; vb = b._idx; break;
     case "gameType":        va = (gameTypeLabels[a.gameType] ?? a.gameType).toLowerCase(); vb = (gameTypeLabels[b.gameType] ?? b.gameType).toLowerCase(); break;
     case "status":          va = a.status; vb = b.status; break;
     case "playerCount":     va = a.playerCount; vb = b.playerCount; break;
@@ -96,14 +94,9 @@ export function GamesTable({ games }: { games: GameRow[] }) {
     else { setSortKey(key); setSortDir("asc"); }
   }
 
-  const indexed = useMemo<IndexedGameRow[]>(
-    () => games.map((g, i) => ({ ...g, _idx: i })),
-    [games],
-  );
-
   const sorted = useMemo(
-    () => sortKey ? [...indexed].sort((a, b) => compare(a, b, sortKey, sortDir)) : indexed,
-    [indexed, sortKey, sortDir],
+    () => sortKey ? [...games].sort((a, b) => compare(a, b, sortKey, sortDir)) : games,
+    [games, sortKey, sortDir],
   );
 
   function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string }) {
@@ -125,7 +118,7 @@ export function GamesTable({ games }: { games: GameRow[] }) {
     <table className="bk-table">
       <thead>
         <tr>
-          <Th col="index" className="bk-th-num">#</Th>
+          <th className="bk-th-num">#</th>
           <Th col="gameType">GAME TYPE</Th>
           <Th col="status">STATUS</Th>
           <Th col="playerCount">PLAYERS</Th>
