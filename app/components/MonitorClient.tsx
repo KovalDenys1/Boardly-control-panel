@@ -108,7 +108,7 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
               <td style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}>
                 {s.playerCount}{s.maxPlayers ? `/${s.maxPlayers}` : ""}
               </td>
-              <td style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontVariantNumeric: "tabular-nums" }}>
+              <td style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontVariantNumeric: "tabular-nums" }} suppressHydrationWarning>
                 {elapsed(s.startedAt ?? s.createdAt)}
               </td>
             </tr>
