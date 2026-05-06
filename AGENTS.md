@@ -30,3 +30,12 @@ Examples:
 Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `style`, `test`
 
 **Never commit without a corresponding GitHub Issue number in the title.**
+
+## Closing tickets
+
+Close the GitHub Issue after the work is committed **and pushed** to the remote.
+
+1. Push the commit(s) to the remote branch.
+2. Close the issue with `gh issue close <number>`.
+
+**Never leave an issue open after the code is live on the remote.**
