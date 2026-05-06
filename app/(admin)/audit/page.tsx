@@ -134,27 +134,26 @@ export default async function AuditPage({
           <span style={{ color: "var(--mute)" }}>
             page {page} of {totalPages} · {total} total entries
           </span>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {page > 1 && (
-              <Link
-                href={`/audit?page=${page - 1}`}
-                className="bk-btn bk-btn--neutral"
-                style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}
-              >
-                <span className="bk-btn-brk">[</span>
-                <span>PREV</span>
-                <span className="bk-btn-brk">]</span>
+              <Link href="/audit?page=1" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>FIRST</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
+            {page > 1 && (
+              <Link href={`/audit?page=${page - 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>PREV</span><span className="bk-btn-brk">]</span>
+              </Link>
+            )}
+            <form action="/audit" method="get" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input type="number" name="page" defaultValue={page} min={1} max={totalPages} className="bk-page-input" />
+              <button type="submit" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>GO</span><span className="bk-btn-brk">]</span>
+              </button>
+            </form>
             {page < totalPages && (
-              <Link
-                href={`/audit?page=${page + 1}`}
-                className="bk-btn bk-btn--neutral"
-                style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}
-              >
-                <span className="bk-btn-brk">[</span>
-                <span>NEXT</span>
-                <span className="bk-btn-brk">]</span>
+              <Link href={`/audit?page=${page + 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>NEXT</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
           </div>

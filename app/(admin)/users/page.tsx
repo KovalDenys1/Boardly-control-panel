@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import { UsersTable } from "@/app/components/UsersTable";
 
 async function liftExpiredBans() {
@@ -10,17 +11,25 @@ async function liftExpiredBans() {
   });
 }
 
-async function getUsers() {
+const PAGE_SIZE = 50;
+
+async function getUsers(page: number) {
   await liftExpiredBans();
-  return prisma.users.findMany({
-    where: { isGuest: false },
-    select: {
-      id: true, email: true, username: true, role: true,
-      suspended: true, banReason: true, banExpiresAt: true,
-      createdAt: true, lastActiveAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const [raw, total] = await Promise.all([
+    prisma.users.findMany({
+      where: { isGuest: false },
+      select: {
+        id: true, email: true, username: true, role: true,
+        suspended: true, banReason: true, banExpiresAt: true,
+        createdAt: true, lastActiveAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.users.count({ where: { isGuest: false } }),
+  ]);
+  return { raw, total };
 }
 
 async function toggleSuspend(
@@ -48,10 +57,17 @@ async function toggleSuspend(
   });
 }
 
-export default async function UsersPage() {
+export default async function UsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const adminId = session!.user!.id!;
-  const raw = await getUsers();
+  const { raw, total } = await getUsers(page);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const users = raw.map((u) => ({
     ...u,
@@ -95,7 +111,7 @@ export default async function UsersPage() {
           <div>
             <h1 className="bk-page-title">users<span className="bk-stat-cursor">▊</span></h1>
             <p className="bk-page-sub">
-              {"// "}{users.length}{" registered"}
+              {"// "}{total}{" registered · page "}{page}{" of "}{totalPages}
               {suspended > 0 && (
                 <> · <span style={{ color: "var(--bad)" }}>{suspended} suspended</span></>
               )}
@@ -108,7 +124,7 @@ export default async function UsersPage() {
               <span>SUSPENDED</span>
             </span>
             <span className="bk-pill bk-pill--mute">
-              <span className="bk-pill-count">{users.length}</span>
+              <span className="bk-pill-count">{total}</span>
               <span className="bk-pill-sep">·</span>
               <span>TOTAL</span>
             </span>
@@ -119,8 +135,31 @@ export default async function UsersPage() {
       <div>
         <UsersTable users={users} handleSuspend={handleSuspend} />
         {users.length === 0 && <div className="bk-empty">no users found</div>}
-        <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
-          {users.length} records · all actions logged to audit trail
+        <div className="bk-table-foot" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--mute)" }}>
+          <span>{users.length} records on this page · {total} total · all actions logged to audit trail</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {page > 1 && (
+              <Link href="/users?page=1" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>FIRST</span><span className="bk-btn-brk">]</span>
+              </Link>
+            )}
+            {page > 1 && (
+              <Link href={`/users?page=${page - 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>PREV</span><span className="bk-btn-brk">]</span>
+              </Link>
+            )}
+            <form action="/users" method="get" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input type="number" name="page" defaultValue={page} min={1} max={totalPages} className="bk-page-input" />
+              <button type="submit" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>GO</span><span className="bk-btn-brk">]</span>
+              </button>
+            </form>
+            {page < totalPages && (
+              <Link href={`/users?page=${page + 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>NEXT</span><span className="bk-btn-brk">]</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

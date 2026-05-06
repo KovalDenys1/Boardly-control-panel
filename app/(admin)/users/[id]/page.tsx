@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 
 async function getUser(id: string) {
   return prisma.users.findUnique({
@@ -70,8 +72,41 @@ const ONLINE_MS = 10 * 60 * 1000;
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [user, auditLog] = await Promise.all([getUser(id), getAuditLog(id)]);
+  const [user, auditLog, session] = await Promise.all([getUser(id), getAuditLog(id), auth()]);
   if (!user) notFound();
+  const adminId = session!.user!.id!;
+
+  async function handleModeration(formData: FormData) {
+    "use server";
+    const s = await auth();
+    if (!s?.user || (s.user as { role?: string }).role !== "admin") return;
+    const action = formData.get("action") as string;
+    const suspend = action === "suspend";
+    const banReason = (formData.get("banReason") as string) || null;
+    const banDuration = formData.get("banDuration") as string | null;
+    let banExpiresAt: Date | null = null;
+    if (suspend && banDuration && banDuration !== "0") {
+      banExpiresAt = new Date(Date.now() + parseInt(banDuration, 10) * 864e5);
+    }
+    await prisma.users.update({
+      where: { id },
+      data: {
+        suspended: suspend,
+        banReason: suspend ? banReason : null,
+        banExpiresAt: suspend ? banExpiresAt : null,
+      },
+    });
+    await prisma.adminAuditLogs.create({
+      data: {
+        id: crypto.randomUUID(), adminId,
+        action: suspend ? "suspend_user" : "unsuspend_user",
+        targetType: "user", targetId: id,
+        details: { suspended: suspend, banReason: banReason ?? null },
+      },
+    });
+    revalidatePath(`/users/${id}`);
+    revalidatePath("/users");
+  }
 
   const isOnline = Date.now() - new Date(user.lastActiveAt).getTime() < ONLINE_MS;
 
@@ -157,6 +192,62 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           <span className="bk-section-bracket">┘</span>
         </div>
       </div>
+
+      {/* Moderation */}
+      {user.role !== "admin" && (
+        <div className="bk-section">
+          <div className="bk-section-head">
+            <span className="bk-section-bracket">┌─</span>
+            <span className="bk-section-title">moderation</span>
+            <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
+            <span className="bk-section-bracket">─┐</span>
+          </div>
+          <div className="bk-section-body">
+            {user.suspended ? (
+              <form action={handleModeration} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <input type="hidden" name="action" value="unsuspend" />
+                <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>
+                  suspended{user.banReason ? ` — ${user.banReason}` : ""}
+                  {user.banExpiresAt ? ` · expires ${fmt(user.banExpiresAt)}` : " · permanent"}
+                </span>
+                <button type="submit" className="bk-btn bk-btn--neutral">
+                  <span className="bk-btn-brk">[</span>
+                  <span className="bk-btn-label">UNSUSPEND</span>
+                  <span className="bk-btn-brk">]</span>
+                </button>
+              </form>
+            ) : (
+              <form action={handleModeration} className="bk-ban-form">
+                <input type="hidden" name="action" value="suspend" />
+                <input
+                  type="text"
+                  name="banReason"
+                  placeholder="reason (optional)"
+                  className="bk-ban-input"
+                  maxLength={200}
+                />
+                <select name="banDuration" className="bk-ban-select">
+                  <option value="0">permanent</option>
+                  <option value="1">1 day</option>
+                  <option value="3">3 days</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                </select>
+                <button type="submit" className="bk-btn bk-btn--bad">
+                  <span className="bk-btn-brk">[</span>
+                  <span className="bk-btn-label">SUSPEND</span>
+                  <span className="bk-btn-brk">]</span>
+                </button>
+              </form>
+            )}
+          </div>
+          <div className="bk-section-foot">
+            <span className="bk-section-bracket">└</span>
+            <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(80)}</span>
+            <span className="bk-section-bracket">┘</span>
+          </div>
+        </div>
+      )}
 
       {/* Game history */}
       <div className="bk-section">

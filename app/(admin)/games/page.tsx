@@ -93,12 +93,23 @@ export default async function GamesPage({
           <span>
             {games.length} records on this page · {total} total · bots excluded from player count
           </span>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {page > 1 && (
+              <Link href="/games?page=1" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>FIRST</span><span className="bk-btn-brk">]</span>
+              </Link>
+            )}
             {page > 1 && (
               <Link href={`/games?page=${page - 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
                 <span className="bk-btn-brk">[</span><span>PREV</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
+            <form action="/games" method="get" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input type="number" name="page" defaultValue={page} min={1} max={totalPages} className="bk-page-input" />
+              <button type="submit" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                <span className="bk-btn-brk">[</span><span>GO</span><span className="bk-btn-brk">]</span>
+              </button>
+            </form>
             {page < totalPages && (
               <Link href={`/games?page=${page + 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
                 <span className="bk-btn-brk">[</span><span>NEXT</span><span className="bk-btn-brk">]</span>

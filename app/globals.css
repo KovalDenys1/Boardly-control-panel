@@ -399,6 +399,18 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-act-bar  { font-size: 12px; overflow: hidden; white-space: nowrap; }
 .bk-act-cnt  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 
+/* ── Page number input ───────────────────────────────────────────────── */
+.bk-page-input {
+  width: 52px; text-align: center;
+  background: rgba(0,0,0,0.5); border: 1px solid var(--line-2);
+  color: var(--fg-strong); padding: 3px 6px; font-size: var(--fz-xs);
+  font-family: var(--mono); outline: none;
+  -moz-appearance: textfield;
+}
+.bk-page-input:focus { border-color: var(--accent); }
+.bk-page-input::-webkit-outer-spin-button,
+.bk-page-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
 /* ── Games filter bar ────────────────────────────────────────────────── */
 .bk-filter-bar   { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .bk-select-wrap  { display: flex; align-items: center; flex-shrink: 0; }

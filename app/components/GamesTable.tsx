@@ -91,6 +91,7 @@ export function GamesTable({ games }: { games: GameRow[] }) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [gameTypeFilter, setGameTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [creatorQuery, setCreatorQuery] = useState("");
 
   const availableTypes = useMemo(() => {
@@ -107,18 +108,15 @@ export function GamesTable({ games }: { games: GameRow[] }) {
 
   const filtered = useMemo(() => {
     let result = games;
-    if (gameTypeFilter !== "all") {
-      result = result.filter((g) => g.gameType === gameTypeFilter);
-    }
+    if (gameTypeFilter !== "all") result = result.filter((g) => g.gameType === gameTypeFilter);
+    if (statusFilter !== "all") result = result.filter((g) => g.status === statusFilter);
     const q = creatorQuery.trim().toLowerCase();
-    if (q) {
-      result = result.filter((g) =>
-        (g.creatorUsername ?? "").toLowerCase().includes(q) ||
-        (g.creatorEmail ?? "").toLowerCase().includes(q),
-      );
-    }
+    if (q) result = result.filter((g) =>
+      (g.creatorUsername ?? "").toLowerCase().includes(q) ||
+      (g.creatorEmail ?? "").toLowerCase().includes(q),
+    );
     return result;
-  }, [games, gameTypeFilter, creatorQuery]);
+  }, [games, gameTypeFilter, statusFilter, creatorQuery]);
 
   const sorted = useMemo(
     () => sortKey ? [...filtered].sort((a, b) => compare(a, b, sortKey, sortDir)) : filtered,
@@ -140,22 +138,30 @@ export function GamesTable({ games }: { games: GameRow[] }) {
     );
   }
 
-  const isFiltered = gameTypeFilter !== "all" || creatorQuery.trim() !== "";
+  const isFiltered = gameTypeFilter !== "all" || statusFilter !== "all" || creatorQuery.trim() !== "";
 
   return (
     <>
     <div className="bk-filter-bar">
       <div className="bk-select-wrap">
         <span className="bk-select-brk">[</span>
-        <select
-          className="bk-filter-select"
-          value={gameTypeFilter}
-          onChange={(e) => setGameTypeFilter(e.target.value)}
-        >
+        <select className="bk-filter-select" value={gameTypeFilter} onChange={(e) => setGameTypeFilter(e.target.value)}>
           <option value="all">all games</option>
           {availableTypes.map((t) => (
             <option key={t} value={t}>{gameTypeLabels[t] ?? t}</option>
           ))}
+        </select>
+        <span className="bk-select-brk">]</span>
+      </div>
+      <div className="bk-select-wrap">
+        <span className="bk-select-brk">[</span>
+        <select className="bk-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">all status</option>
+          <option value="playing">playing</option>
+          <option value="waiting">waiting</option>
+          <option value="finished">finished</option>
+          <option value="abandoned">abandoned</option>
+          <option value="cancelled">cancelled</option>
         </select>
         <span className="bk-select-brk">]</span>
       </div>
