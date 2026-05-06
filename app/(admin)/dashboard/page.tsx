@@ -7,7 +7,7 @@ function dayKey(d: Date) {
 
 function buildDays() {
   const days: { key: string; label: string }[] = [];
-  for (let i = 6; i >= 0; i--) {
+  for (let i = 0; i <= 6; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = dayKey(d);
