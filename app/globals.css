@@ -329,6 +329,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 }
 .bk-table tbody tr.winner-row { background: rgba(255,176,0,0.05); }
 .bk-cell-user-name { color: var(--fg-strong); font-weight: 600; }
+.bk-user-link:hover { color: var(--accent) !important; }
 .bk-cell-user-mail { color: var(--mute); font-size: var(--fz-xs); margin-top: 2px; }
 .bk-table-foot {
   padding: 8px 14px; border-top: 1px solid var(--line);
@@ -371,6 +372,9 @@ input, button, textarea, select { font: inherit; color: inherit; }
   margin: 14px 0 0; padding: 10px 12px; border: 1px dashed var(--line-2);
   background: rgba(0,0,0,0.3); color: var(--mute); font-size: var(--fz-xs);
 }
+
+/* ── Activity / games chart wrapper (limits width so bars don't stretch) */
+.bk-act-wrap { max-width: 900px; }
 
 /* ── Activity chart (dashboard 7d) ──────────────────────────────────── */
 .bk-act-head, .bk-act-row, .bk-act-foot {

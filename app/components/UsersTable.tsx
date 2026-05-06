@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 export type UserRow = {
   id: string;
@@ -53,10 +54,13 @@ export function UsersTable({
   users: UserRow[];
   handleSuspend: (formData: FormData) => Promise<void>;
 }) {
+  const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [openBanForm, setOpenBanForm] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"" | "admin" | "user">("");
+  const [statusFilter, setStatusFilter] = useState<"" | "active" | "suspended">("");
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => (d === "asc" ? "desc" : "asc"));
@@ -64,13 +68,17 @@ export function UsersTable({
   }
 
   const filtered = useMemo(() => {
+    let result = users;
     const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) =>
+    if (q) result = result.filter((u) =>
       (u.username ?? "").toLowerCase().includes(q) ||
       (u.email ?? "").toLowerCase().includes(q),
     );
-  }, [users, query]);
+    if (roleFilter) result = result.filter((u) => u.role === roleFilter);
+    if (statusFilter === "active") result = result.filter((u) => !u.suspended);
+    if (statusFilter === "suspended") result = result.filter((u) => u.suspended);
+    return result;
+  }, [users, query, roleFilter, statusFilter]);
 
   const sorted = useMemo(
     () => sortKey ? [...filtered].sort((a, b) => compare(a, b, sortKey, sortDir)) : filtered,
@@ -94,22 +102,40 @@ export function UsersTable({
 
   return (
     <>
-    <div className="bk-search-bar">
-      <span className="bk-search-prompt">$</span>
-      <input
-        type="text"
-        className="bk-search-input"
-        placeholder="search username or email..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        spellCheck={false}
-        autoComplete="off"
-      />
-      {query && (
-        <span className="bk-search-count">
-          {sorted.length} / {users.length}
-        </span>
-      )}
+    <div className="bk-filter-bar">
+      <div className="bk-search-bar" style={{ flex: 1 }}>
+        <span className="bk-search-prompt">$</span>
+        <input
+          type="text"
+          className="bk-search-input"
+          placeholder="search username or email..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          spellCheck={false}
+          autoComplete="off"
+        />
+        {(query || roleFilter || statusFilter) && (
+          <span className="bk-search-count">{sorted.length} / {users.length}</span>
+        )}
+      </div>
+      <div className="bk-select-wrap">
+        <span className="bk-select-brk">[</span>
+        <select className="bk-filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}>
+          <option value="">all roles</option>
+          <option value="admin">admin</option>
+          <option value="user">user</option>
+        </select>
+        <span className="bk-select-brk">]</span>
+      </div>
+      <div className="bk-select-wrap">
+        <span className="bk-select-brk">[</span>
+        <select className="bk-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}>
+          <option value="">all status</option>
+          <option value="active">active</option>
+          <option value="suspended">suspended</option>
+        </select>
+        <span className="bk-select-brk">]</span>
+      </div>
     </div>
     <div className="bk-table-wrap">
     <table className="bk-table" style={{ minHeight: "320px" }}>
@@ -127,7 +153,7 @@ export function UsersTable({
       </thead>
       <tbody>
         {sorted.map((user, i) => (
-          <tr key={user.id}>
+          <tr key={user.id} style={{ cursor: "pointer" }} onClick={() => router.push(`/users/${user.id}`)}>
             <td className="bk-td-num" style={{ color: "var(--mute)" }}>{String(i + 1).padStart(2, "0")}</td>
             <td>
               <div className="bk-cell-user-name">{user.username ?? "—"}</div>
@@ -166,7 +192,7 @@ export function UsersTable({
                 <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span></span>
               )}
             </td>
-            <td className="bk-td-right">
+            <td className="bk-td-right" onClick={(e) => e.stopPropagation()}>
               {user.role !== "admin" && (
                 user.suspended ? (
                   <form action={handleSuspend}>

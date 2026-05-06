@@ -12,7 +12,7 @@ async function getLogs(page: number) {
       select: {
         id: true, action: true, targetType: true, targetId: true,
         details: true, createdAt: true,
-        Users: { select: { username: true, email: true } },
+        Users: { select: { id: true, username: true, email: true } },
       },
     }),
     prisma.adminAuditLogs.count(),
@@ -89,17 +89,27 @@ export default async function AuditPage({
                     </span>
                   </td>
                   <td>
-                    <div className="bk-cell-user-name">{log.Users.username ?? "—"}</div>
-                    <div className="bk-cell-user-mail">{log.Users.email ?? "—"}</div>
+                    <Link href={`/users/${log.Users.id}`} style={{ textDecoration: "none" }}>
+                      <div className="bk-cell-user-name bk-user-link">{log.Users.username ?? "—"}</div>
+                      <div className="bk-cell-user-mail">{log.Users.email ?? "—"}</div>
+                    </Link>
                   </td>
                   <td>
                     <div style={{ fontSize: "var(--fz-xs)", color: "var(--mute)", letterSpacing: "0.04em" }}>
                       {log.targetType}
                     </div>
                     {log.targetId && (
-                      <div style={{ fontSize: "var(--fz-xs)", color: "var(--mute-2)", fontFamily: "var(--mono)" }}>
-                        {log.targetId.slice(0, 8)}…
-                      </div>
+                      log.targetType === "user" ? (
+                        <Link href={`/users/${log.targetId}`} style={{ textDecoration: "none" }}>
+                          <div style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontFamily: "var(--mono)" }}>
+                            {log.targetId.slice(0, 8)}…
+                          </div>
+                        </Link>
+                      ) : (
+                        <div style={{ fontSize: "var(--fz-xs)", color: "var(--mute-2)", fontFamily: "var(--mono)" }}>
+                          {log.targetId.slice(0, 8)}…
+                        </div>
+                      )
                     )}
                   </td>
                   <td style={{ fontSize: "var(--fz-xs)", color: "var(--mute)", maxWidth: 240 }}>

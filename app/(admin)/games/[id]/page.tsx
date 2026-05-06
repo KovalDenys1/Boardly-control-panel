@@ -155,7 +155,14 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
               {"// "}{game.id}
             </p>
           </div>
-          {statusBadge(game.status)}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {statusBadge(game.status)}
+            <Link href="/games" className="bk-btn bk-btn--neutral">
+              <span className="bk-btn-brk">[</span>
+              <span className="bk-btn-label">← BACK</span>
+              <span className="bk-btn-brk">]</span>
+            </Link>
+          </div>
         </div>
       </div>
 

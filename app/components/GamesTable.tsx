@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export type GameRow = {
   id: string;
@@ -87,6 +87,7 @@ function compare(a: GameRow, b: GameRow, key: SortKey, dir: SortDir): number {
 }
 
 export function GamesTable({ games }: { games: GameRow[] }) {
+  const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [gameTypeFilter, setGameTypeFilter] = useState("all");
@@ -193,31 +194,25 @@ export function GamesTable({ games }: { games: GameRow[] }) {
       </thead>
       <tbody>
         {sorted.map((game, i) => (
-          <tr key={game.id} style={{ cursor: "pointer" }}>
+          <tr key={game.id} style={{ cursor: "pointer" }} onClick={() => router.push(`/games/${game.id}`)}>
             <td className="bk-td-num" style={{ color: "var(--mute)" }}>{String(i + 1).padStart(2, "0")}</td>
+            <td style={{ color: "var(--fg-strong)", fontWeight: 600 }}>{gameTypeLabels[game.gameType] ?? game.gameType}</td>
             <td>
-              <Link href={`/games/${game.id}`} style={{ color: "var(--fg-strong)", textDecoration: "none", fontWeight: 600, display: "block" }}>
-                {gameTypeLabels[game.gameType] ?? game.gameType}
-              </Link>
+              {game.creatorUsername ? (
+                <>
+                  <div className="bk-cell-user-name">{game.creatorUsername}</div>
+                  <div className="bk-cell-user-mail">{game.creatorEmail ?? ""}</div>
+                </>
+              ) : (
+                <span style={{ color: "var(--mute-2)" }}>—</span>
+              )}
             </td>
-            <td>
-              <Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>
-                {game.creatorUsername ? (
-                  <>
-                    <div className="bk-cell-user-name">{game.creatorUsername}</div>
-                    <div className="bk-cell-user-mail">{game.creatorEmail ?? ""}</div>
-                  </>
-                ) : (
-                  <span style={{ color: "var(--mute-2)" }}>—</span>
-                )}
-              </Link>
-            </td>
-            <td><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{statusBadge(game.status)}</Link></td>
-            <td style={{ color: "var(--fg)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{game.playerCount}</Link></td>
-            <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDate(game.createdAt)}</Link></td>
-            <td style={{ fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDateTime(game.startedAt)}</Link></td>
-            <td style={{ fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDateTime(game.endedAt)}</Link></td>
-            <td className="bk-td-right" style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}><Link href={`/games/${game.id}`} style={{ textDecoration: "none", display: "block" }}>{fmtDur(game.durationSeconds)}</Link></td>
+            <td>{statusBadge(game.status)}</td>
+            <td style={{ color: "var(--fg)" }}>{game.playerCount}</td>
+            <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmtDate(game.createdAt)}</td>
+            <td style={{ fontSize: "var(--fz-xs)" }}>{fmtDateTime(game.startedAt)}</td>
+            <td style={{ fontSize: "var(--fz-xs)" }}>{fmtDateTime(game.endedAt)}</td>
+            <td className="bk-td-right" style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}>{fmtDur(game.durationSeconds)}</td>
           </tr>
         ))}
       </tbody>

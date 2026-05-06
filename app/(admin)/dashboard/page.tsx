@@ -174,6 +174,7 @@ export default async function DashboardPage() {
           <span className="bk-section-bracket">─┐</span>
         </div>
         <div className="bk-section-body">
+          <div className="bk-act-wrap">
           <div className="bk-act-head">
             <span style={{ color: 'var(--mute)' }}>DATE</span>
             <span style={{ color: 'var(--mute)' }}>
@@ -225,6 +226,7 @@ export default async function DashboardPage() {
             <span />
             <span style={{ color: 'var(--fg)', fontWeight: 600, textAlign: 'right' }}>{usersTotal7d}</span>
           </div>
+          </div>
         </div>
         <div className="bk-section-foot">
           <span className="bk-section-bracket">└</span>
@@ -244,6 +246,7 @@ export default async function DashboardPage() {
           <span className="bk-section-bracket">─┐</span>
         </div>
         <div className="bk-section-body">
+          <div className="bk-act-wrap">
           <div className="bk-gtbar bk-gtbar--head">
             <span style={{ color: 'var(--mute)' }}>GAME TYPE</span>
             <span style={{ color: 'var(--mute)' }}>DISTRIBUTION</span>
@@ -268,6 +271,7 @@ export default async function DashboardPage() {
             )
           })}
           {gamesByType.length === 0 && <div className="bk-empty">no game data available</div>}
+          </div>
         </div>
         <div className="bk-section-foot">
           <span className="bk-section-bracket">└</span>

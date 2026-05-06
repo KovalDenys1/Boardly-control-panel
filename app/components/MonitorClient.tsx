@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 type Session = {
   id: string;
@@ -74,7 +73,7 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
         </thead>
         <tbody>
           {sessions.map((s, i) => (
-            <tr key={s.id} style={{ cursor: "pointer" }}>
+            <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => router.push(`/games/${s.id}`)}>
               <td className="bk-td-num" style={{ color: "var(--mute)" }}>
                 {String(i + 1).padStart(2, "0")}
               </td>
@@ -85,44 +84,32 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
                   <span className="bk-brk-r">]</span>
                 </span>
               </td>
+              <td style={{ color: "var(--fg-strong)", fontWeight: 600 }}>{s.gameType}</td>
               <td>
-                <Link href={`/games/${s.id}`} style={{ color: "var(--fg-strong)", textDecoration: "none", fontWeight: 600, display: "block" }}>
-                  {s.gameType}
-                </Link>
+                {s.lobbyCode ? (
+                  <>
+                    <div style={{ color: "var(--accent)", fontSize: "var(--fz-xs)" }}>{s.lobbyCode}</div>
+                    {s.lobbyName && <div className="bk-cell-user-mail">{s.lobbyName}</div>}
+                  </>
+                ) : (
+                  <span style={{ color: "var(--mute-2)" }}>—</span>
+                )}
               </td>
               <td>
-                <Link href={`/games/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
-                  {s.lobbyCode ? (
-                    <>
-                      <div style={{ color: "var(--accent)", fontSize: "var(--fz-xs)" }}>{s.lobbyCode}</div>
-                      {s.lobbyName && <div className="bk-cell-user-mail">{s.lobbyName}</div>}
-                    </>
-                  ) : (
-                    <span style={{ color: "var(--mute-2)" }}>—</span>
-                  )}
-                </Link>
-              </td>
-              <td>
-                <Link href={`/games/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
-                  {s.creatorUsername ? (
-                    <>
-                      <div className="bk-cell-user-name">{s.creatorUsername}</div>
-                      <div className="bk-cell-user-mail">{s.creatorEmail ?? ""}</div>
-                    </>
-                  ) : (
-                    <span style={{ color: "var(--mute-2)" }}>—</span>
-                  )}
-                </Link>
+                {s.creatorUsername ? (
+                  <>
+                    <div className="bk-cell-user-name">{s.creatorUsername}</div>
+                    <div className="bk-cell-user-mail">{s.creatorEmail ?? ""}</div>
+                  </>
+                ) : (
+                  <span style={{ color: "var(--mute-2)" }}>—</span>
+                )}
               </td>
               <td style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}>
-                <Link href={`/games/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
-                  {s.playerCount}{s.maxPlayers ? `/${s.maxPlayers}` : ""}
-                </Link>
+                {s.playerCount}{s.maxPlayers ? `/${s.maxPlayers}` : ""}
               </td>
               <td style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontVariantNumeric: "tabular-nums" }}>
-                <Link href={`/games/${s.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-                  {elapsed(s.startedAt ?? s.createdAt)}
-                </Link>
+                {elapsed(s.startedAt ?? s.createdAt)}
               </td>
             </tr>
           ))}
