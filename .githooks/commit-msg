@@ -1,0 +1,14 @@
+#!/bin/sh
+# Enforces commit message format: #<number> <type>: <description>
+msg=$(cat "$1")
+if ! echo "$msg" | grep -qE '^#[0-9]+ (feat|fix|chore|refactor|docs|style|test): .+'; then
+  echo ""
+  echo "  ERROR: commit message must reference a GitHub Issue."
+  echo ""
+  echo "  Required format:  #<issue-number> <type>: <description>"
+  echo "  Example:          #11 feat: add audit log viewer"
+  echo ""
+  echo "  Types: feat | fix | chore | refactor | docs | style | test"
+  echo ""
+  exit 1
+fi
