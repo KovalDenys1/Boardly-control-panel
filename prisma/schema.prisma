@@ -278,15 +278,16 @@ model Notifications {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model OperationalAlertStates {
-  id              String    @id
-  alertKey        String    @unique
-  isOpen          Boolean   @default(false)
-  lastValue       Float?
-  lastTriggeredAt DateTime? @db.Timestamptz(3)
-  lastNotifiedAt  DateTime? @db.Timestamptz(3)
-  lastResolvedAt  DateTime? @db.Timestamptz(3)
-  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime  @db.Timestamptz(3)
+  id                String    @id
+  alertKey          String    @unique
+  isOpen            Boolean   @default(false)
+  lastValue         Float?
+  lastTriggeredAt   DateTime? @db.Timestamptz(3)
+  lastNotifiedAt    DateTime? @db.Timestamptz(3)
+  lastResolvedAt    DateTime? @db.Timestamptz(3)
+  githubIssueNumber Int?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @db.Timestamptz(3)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -328,19 +329,20 @@ model PasswordResetTokens {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Players {
-  id         String   @id
+  id         String    @id
   gameId     String
   userId     String
-  score      Int      @default(0)
+  score      Int       @default(0)
   finalScore Int?
   placement  Int?
   scorecard  String?
   position   Int
-  isReady    Boolean  @default(false)
-  isWinner   Boolean  @default(false)
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
-  Games      Games    @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  Users      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isReady    Boolean   @default(false)
+  isWinner   Boolean   @default(false)
+  leftAt     DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  Games      Games     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  Users      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([gameId, userId])
   @@index([gameId])
@@ -445,6 +447,7 @@ enum GameType {
   sketch_and_guess
   liars_party
   fake_artist
+  alias
   other
 }
 
