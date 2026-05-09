@@ -3,9 +3,10 @@ import { prisma } from "@/lib/prisma";
 const gameTypeLabels: Record<string, string> = {
   yahtzee: "Yahtzee", tic_tac_toe: "Tic-Tac-Toe",
   rock_paper_scissors: "RPS", guess_the_spy: "Guess Spy",
-  memory: "Memory", telephone_doodle: "Tel. Doodle",
-  sketch_and_guess: "Sketch", liars_party: "Liars",
-  fake_artist: "Fake Artist", other: "Other",
+  memory: "Memory", connect_four: "Connect Four",
+  telephone_doodle: "Tel. Doodle", sketch_and_guess: "Sketch",
+  liars_party: "Liars", fake_artist: "Fake Artist",
+  alias: "Alias", other: "Other",
 };
 
 function fmtNum(n: number) { return n.toLocaleString("en-US"); }
