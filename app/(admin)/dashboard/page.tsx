@@ -30,6 +30,7 @@ async function getStats() {
     totalUsers, registeredUsers, suspendedUsers,
     activeGames, totalGames, gamesByType,
     recentGames, recentUsers,
+    premiumUsers, premiumCancelling,
   ] = await Promise.all([
     prisma.users.count({ where: { isGuest: false } }),
     prisma.users.count({ where: { isGuest: false, suspended: false } }),
@@ -39,6 +40,8 @@ async function getStats() {
     prisma.games.groupBy({ by: ['gameType'], _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
     prisma.games.findMany({ where: { createdAt: { gte: sevenDaysAgo } }, select: { createdAt: true } }),
     prisma.users.findMany({ where: { isGuest: false, createdAt: { gte: sevenDaysAgo } }, select: { createdAt: true } }),
+    prisma.users.count({ where: { isGuest: false, premiumUntil: { gt: new Date() } } }),
+    prisma.users.count({ where: { isGuest: false, premiumUntil: { gt: new Date() }, premiumCancelAtPeriod: true } }),
   ]);
 
   const gamesByDay: Record<string, number> = {};
@@ -47,7 +50,7 @@ async function getStats() {
   const usersByDay: Record<string, number> = {};
   for (const u of recentUsers) usersByDay[dayKey(u.createdAt)] = (usersByDay[dayKey(u.createdAt)] ?? 0) + 1;
 
-  return { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay };
+  return { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay, premiumUsers, premiumCancelling };
 }
 
 const gameTypeLabels: Record<string, string> = {
@@ -77,7 +80,7 @@ function AsciiBar({ pct }: { pct: number }) {
 }
 
 export default async function DashboardPage() {
-  const { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay } =
+  const { totalUsers, registeredUsers, suspendedUsers, activeGames, totalGames, gamesByType, gamesByDay, usersByDay, premiumUsers, premiumCancelling } =
     await getStats()
 
   const days = buildDays()
@@ -164,6 +167,20 @@ export default async function DashboardPage() {
           </div>
           <div className="bk-stat-value">{totalGames.toLocaleString()}</div>
           <div className="bk-stat-sub">all time across all types</div>
+        </Link>
+
+        {/* Premium Users */}
+        <Link href="/users" className={`bk-stat ${premiumUsers > 0 ? 'bk-stat--ok' : ''}`}>
+          <span className="bk-stat-corner bk-stat-corner--tl">┌</span>
+          <span className="bk-stat-corner bk-stat-corner--tr">┐</span>
+          <span className="bk-stat-corner bk-stat-corner--bl">└</span>
+          <span className="bk-stat-corner bk-stat-corner--br">┘</span>
+          <div className="bk-stat-top">
+            <span className="bk-stat-code">stat.05</span>
+            <span className="bk-stat-label">PREMIUM USERS</span>
+          </div>
+          <div className="bk-stat-value">{premiumUsers.toLocaleString()}</div>
+          <div className="bk-stat-sub">{premiumCancelling} cancelling at period end</div>
         </Link>
       </div>
 
