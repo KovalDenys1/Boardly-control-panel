@@ -11,6 +11,9 @@ async function getUser(id: string) {
       id: true, email: true, username: true, role: true, friendCode: true,
       suspended: true, banReason: true, banExpiresAt: true,
       createdAt: true, lastActiveAt: true, emailVerified: true,
+      avatarUrl: true, bio: true, accentColor: true, featuredGame: true,
+      premiumCardStyle: true, premiumUntil: true, premiumCancelAtPeriod: true,
+      stripeCustomerId: true, stripeSubscriptionId: true,
       Players: {
         orderBy: { createdAt: "desc" },
         take: 20,
@@ -179,6 +182,11 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                 ? <span style={{ color: "var(--bad)" }}>suspended{user.banReason ? ` — ${user.banReason}` : ""}</span>
                 : <span style={{ color: "var(--accent)" }}>active</span>],
               ...(user.suspended && user.banExpiresAt ? [["ban expires", fmt(user.banExpiresAt)] as [string, React.ReactNode]] : []),
+              ["avatar",       user.avatarUrl ? <a href={user.avatarUrl} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>view</a> : "—"],
+              ["bio",          user.bio ?? "—"],
+              ["accent color", user.accentColor ?? "—"],
+              ["featured game", user.featuredGame ?? "—"],
+              ["card style",   user.premiumCardStyle ?? "—"],
             ] as [string, React.ReactNode][]).map(([label, value]) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
                 <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)", letterSpacing: "0.08em" }}>{label}</span>
@@ -263,6 +271,53 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
       )}
+
+      {/* Premium subscription */}
+      {(() => {
+        const now = new Date();
+        const until = user.premiumUntil ? new Date(user.premiumUntil) : null;
+        const isActive = until !== null && until > now;
+        const isExpired = until !== null && until <= now;
+        return (
+          <div className="bk-section">
+            <div className="bk-section-head">
+              <span className="bk-section-bracket">┌─</span>
+              <span className="bk-section-title">premium_subscription</span>
+              <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
+              <span className="bk-section-bracket">─┐</span>
+            </div>
+            <div className="bk-section-body">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "6px 40px" }}>
+                {([
+                  ["premium status", isActive
+                    ? <span className="bk-brk bk-brk--warn"><span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span></span>
+                    : isExpired
+                    ? <span className="bk-brk bk-brk--bad"><span className="bk-brk-l">[</span>EXPIRED<span className="bk-brk-r">]</span></span>
+                    : <span style={{ color: "var(--mute-2)" }}>[NONE]</span>],
+                  ["premium until",  until ? fmt(until) : "—"],
+                  ["cancel at end",  user.premiumCancelAtPeriod === true ? "yes" : user.premiumCancelAtPeriod === false ? "no" : "—"],
+                  ["stripe cust id", user.stripeCustomerId
+                    ? <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{user.stripeCustomerId}</span>
+                    : "—"],
+                  ["stripe sub id",  user.stripeSubscriptionId
+                    ? <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{user.stripeSubscriptionId}</span>
+                    : "—"],
+                ] as [string, React.ReactNode][]).map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
+                    <span style={{ color: "var(--mute)", fontSize: "var(--fz-xs)", letterSpacing: "0.08em" }}>{label}</span>
+                    <span style={{ color: "var(--fg-strong)", fontSize: "var(--fz-xs)", textAlign: "right", maxWidth: "60%" }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bk-section-foot">
+              <span className="bk-section-bracket">└</span>
+              <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(80)}</span>
+              <span className="bk-section-bracket">┘</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Game history */}
       <div className="bk-section">
