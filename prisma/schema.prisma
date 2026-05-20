@@ -201,6 +201,8 @@ model Lobbies {
   allowSpectators Boolean        @default(false)
   maxSpectators   Int            @default(10)
   spectatorCount  Int            @default(0)
+  theme           String         @default("default")
+  minPlayers      Int?
   Games           Games[]
   Users           Users?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   LobbyInvites    LobbyInvites[]
@@ -391,6 +393,15 @@ model Users {
   banExpiresAt                                    DateTime?                @db.Timestamptz(3)
   publicProfileId                                 String?                  @unique
   pendingEmail                                    String?                  @unique
+  avatarUrl                                       String?
+  bio                                             String?
+  accentColor                                     String?
+  featuredGame                                    String?
+  premiumCardStyle                                String?
+  stripeCustomerId                                String?                  @unique
+  stripeSubscriptionId                            String?                  @unique
+  premiumUntil                                    DateTime?                @db.Timestamptz(3)
+  premiumCancelAtPeriod                           Boolean?
   AccountPreferences                              AccountPreferences?
   Accounts                                        Accounts[]
   AdminAuditLogs                                  AdminAuditLogs[]
