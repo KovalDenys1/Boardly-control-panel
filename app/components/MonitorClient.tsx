@@ -11,8 +11,10 @@ type Session = {
   startedAt: string | null;
   playerCount: number;
   maxPlayers: number | null;
+  minPlayers: number | null;
   lobbyCode: string | null;
   lobbyName: string | null;
+  lobbyTheme: string;
   creatorUsername: string | null;
   creatorEmail: string | null;
 };
@@ -66,6 +68,7 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
             <th>STATUS</th>
             <th>GAME TYPE</th>
             <th>LOBBY</th>
+            <th>THEME</th>
             <th>CREATOR</th>
             <th>PLAYERS</th>
             <th>ELAPSED</th>
@@ -95,6 +98,9 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
                   <span style={{ color: "var(--mute-2)" }}>—</span>
                 )}
               </td>
+              <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>
+                {s.lobbyTheme}
+              </td>
               <td>
                 {s.creatorUsername ? (
                   <>
@@ -107,6 +113,7 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
               </td>
               <td style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}>
                 {s.playerCount}{s.maxPlayers ? `/${s.maxPlayers}` : ""}
+                {s.minPlayers ? <span style={{ color: "var(--mute-2)" }}>{` (min ${s.minPlayers})`}</span> : null}
               </td>
               <td style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontVariantNumeric: "tabular-nums" }} suppressHydrationWarning>
                 {elapsed(s.startedAt ?? s.createdAt)}
