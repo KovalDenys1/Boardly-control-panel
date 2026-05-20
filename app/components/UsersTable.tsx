@@ -13,6 +13,7 @@ export type UserRow = {
   banExpiresAt: string | null;
   createdAt: string;
   lastActiveAt: string;
+  premiumUntil: string | null;
 };
 
 type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status";
@@ -166,13 +167,14 @@ export function UsersTable({
               <Th col="lastActiveAt">LAST ACTIVE</Th>
               <Th col="online">ONLINE</Th>
               <Th col="status">STATUS</Th>
+              <th>PREMIUM</th>
               <th className="bk-th-right">ACTION</th>
             </tr>
           </thead>
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={8} className="bk-empty-cell">// no results</td>
+                <td colSpan={9} className="bk-empty-cell">// no results</td>
               </tr>
             ) : users.map((user, i) => (
               <tr key={user.id} style={{ cursor: "pointer" }} onClick={() => router.push(`/users/${user.id}`)}>
@@ -212,6 +214,15 @@ export function UsersTable({
                     </div>
                   ) : (
                     <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span></span>
+                  )}
+                </td>
+                <td>
+                  {user.premiumUntil && new Date(user.premiumUntil) > new Date() ? (
+                    <span className="bk-brk bk-brk--warn">
+                      <span className="bk-brk-l">[</span>PREMIUM<span className="bk-brk-r">]</span>
+                    </span>
+                  ) : (
+                    <span style={{ color: "var(--mute-2)" }}>—</span>
                   )}
                 </td>
                 <td className="bk-td-right" onClick={(e) => e.stopPropagation()}>

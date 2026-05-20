@@ -40,13 +40,13 @@ async function getUsers(page: number, q: string, role: string, status: string, s
   else if (sort === "online") orderBy = { lastActiveAt: d };
   else if (sort === "status") orderBy = { suspended: d };
 
-  const [raw, total, filteredTotal, suspendedTotal] = await Promise.all([
+  const [raw, total, filteredTotal, suspendedTotal, premiumTotal] = await Promise.all([
     prisma.users.findMany({
       where,
       select: {
         id: true, email: true, username: true, role: true,
         suspended: true, banReason: true, banExpiresAt: true,
-        createdAt: true, lastActiveAt: true,
+        createdAt: true, lastActiveAt: true, premiumUntil: true,
       },
       orderBy,
       skip: (page - 1) * PAGE_SIZE,
@@ -55,9 +55,10 @@ async function getUsers(page: number, q: string, role: string, status: string, s
     prisma.users.count({ where: { isGuest: false } }),
     prisma.users.count({ where }),
     prisma.users.count({ where: { isGuest: false, suspended: true } }),
+    prisma.users.count({ where: { isGuest: false, premiumUntil: { gt: new Date() } } }),
   ]);
 
-  return { raw, total, filteredTotal, suspendedTotal };
+  return { raw, total, filteredTotal, suspendedTotal, premiumTotal };
 }
 
 async function toggleSuspend(
@@ -94,7 +95,7 @@ export default async function UsersPage({
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const adminId = session!.user!.id!;
-  const { raw, total, filteredTotal, suspendedTotal } = await getUsers(page, q, role, status, sort, dir);
+  const { raw, total, filteredTotal, suspendedTotal, premiumTotal } = await getUsers(page, q, role, status, sort, dir);
   const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
 
   const currentSort = (["username", "role", "createdAt", "lastActiveAt", "online", "status"].includes(sort) ? sort : null) as SortKey | null;
@@ -105,6 +106,7 @@ export default async function UsersPage({
     banExpiresAt: u.banExpiresAt?.toISOString() ?? null,
     createdAt: u.createdAt.toISOString(),
     lastActiveAt: u.lastActiveAt.toISOString(),
+    premiumUntil: u.premiumUntil?.toISOString() ?? null,
   }));
 
   async function handleSuspend(formData: FormData) {
@@ -141,6 +143,11 @@ export default async function UsersPage({
             </p>
           </div>
           <div className="bk-pill-row">
+            <span className={`bk-pill bk-pill--${premiumTotal > 0 ? "warn" : "mute"}`}>
+              <span className="bk-pill-count">{premiumTotal}</span>
+              <span className="bk-pill-sep">·</span>
+              <span>PREMIUM</span>
+            </span>
             <span className={`bk-pill bk-pill--${suspendedTotal > 0 ? "bad" : "mute"}`}>
               <span className="bk-pill-count">{suspendedTotal}</span>
               <span className="bk-pill-sep">·</span>
