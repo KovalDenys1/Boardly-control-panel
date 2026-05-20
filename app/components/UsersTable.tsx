@@ -16,7 +16,7 @@ export type UserRow = {
   premiumUntil: string | null;
 };
 
-type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status";
+type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status" | "premium";
 type SortDir = "asc" | "desc";
 
 const ONLINE_MS = 10 * 60 * 1000;
@@ -152,6 +152,7 @@ export function UsersTable({
             <option value="">all status</option>
             <option value="active">active</option>
             <option value="suspended">suspended</option>
+            <option value="premium">premium</option>
           </select>
           <span className="bk-select-brk">]</span>
         </div>
@@ -167,7 +168,7 @@ export function UsersTable({
               <Th col="lastActiveAt">LAST ACTIVE</Th>
               <Th col="online">ONLINE</Th>
               <Th col="status">STATUS</Th>
-              <th>PREMIUM</th>
+              <Th col="premium">PREMIUM</Th>
               <th className="bk-th-right">ACTION</th>
             </tr>
           </thead>

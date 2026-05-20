@@ -170,7 +170,7 @@ export default async function DashboardPage() {
         </Link>
 
         {/* Premium Users */}
-        <Link href="/users" className={`bk-stat ${premiumUsers > 0 ? 'bk-stat--ok' : ''}`}>
+        <Link href="/users?status=premium&sort=premium&dir=desc" className={`bk-stat ${premiumUsers > 0 ? 'bk-stat--ok' : ''}`}>
           <span className="bk-stat-corner bk-stat-corner--tl">┌</span>
           <span className="bk-stat-corner bk-stat-corner--tr">┐</span>
           <span className="bk-stat-corner bk-stat-corner--bl">└</span>

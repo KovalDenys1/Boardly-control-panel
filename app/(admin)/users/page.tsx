@@ -14,7 +14,7 @@ async function liftExpiredBans() {
 
 const PAGE_SIZE = 50;
 
-type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status";
+type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status" | "premium";
 
 async function getUsers(page: number, q: string, role: string, status: string, sort: string, dir: string) {
   await liftExpiredBans();
@@ -31,6 +31,7 @@ async function getUsers(page: number, q: string, role: string, status: string, s
   if (role === "admin" || role === "user") where.role = role;
   if (status === "active") where.suspended = false;
   if (status === "suspended") where.suspended = true;
+  if (status === "premium") where.premiumUntil = { gt: new Date() };
 
   let orderBy: Prisma.UsersOrderByWithRelationInput = { createdAt: "desc" };
   if (sort === "username") orderBy = { username: d };
@@ -39,6 +40,7 @@ async function getUsers(page: number, q: string, role: string, status: string, s
   else if (sort === "lastActiveAt") orderBy = { lastActiveAt: d };
   else if (sort === "online") orderBy = { lastActiveAt: d };
   else if (sort === "status") orderBy = { suspended: d };
+  else if (sort === "premium") orderBy = { premiumUntil: { sort: d, nulls: d === "asc" ? "first" : "last" } };
 
   const [raw, total, filteredTotal, suspendedTotal, premiumTotal] = await Promise.all([
     prisma.users.findMany({
@@ -98,7 +100,7 @@ export default async function UsersPage({
   const { raw, total, filteredTotal, suspendedTotal, premiumTotal } = await getUsers(page, q, role, status, sort, dir);
   const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
 
-  const currentSort = (["username", "role", "createdAt", "lastActiveAt", "online", "status"].includes(sort) ? sort : null) as SortKey | null;
+  const currentSort = (["username", "role", "createdAt", "lastActiveAt", "online", "status", "premium"].includes(sort) ? sort : null) as SortKey | null;
   const currentDir = dir === "asc" ? "asc" : "desc";
 
   const users = raw.map((u) => ({
