@@ -219,6 +219,8 @@ async function getAnalytics() {
     totalUsers,
     activeWeekly,
     feedbackByType,
+    premiumUsers,
+    premiumCancelling,
   ] = await Promise.all([
     prisma.$queryRaw<{ day: string; count: number }[]>`
       SELECT TO_CHAR("createdAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
@@ -257,13 +259,15 @@ async function getAnalytics() {
     prisma.users.count({ where: { isGuest: false } }),
     prisma.users.count({ where: { isGuest: false, lastActiveAt: { gte: sevenDaysAgo } } }),
     prisma.feedback.groupBy({ by: ["type"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
+    prisma.users.count({ where: { isGuest: false, premiumUntil: { gt: now } } }),
+    prisma.users.count({ where: { isGuest: false, premiumUntil: { gt: now }, premiumCancelAtPeriod: true } }),
   ]);
 
-  return { regsByDay, gamesByDay, statusCounts, typeStats, hourlyGames, totalUsers, activeWeekly, feedbackByType };
+  return { regsByDay, gamesByDay, statusCounts, typeStats, hourlyGames, totalUsers, activeWeekly, feedbackByType, premiumUsers, premiumCancelling };
 }
 
 export default async function AnalyticsPage() {
-  const { regsByDay, gamesByDay, statusCounts, typeStats, hourlyGames, totalUsers, activeWeekly, feedbackByType } = await getAnalytics();
+  const { regsByDay, gamesByDay, statusCounts, typeStats, hourlyGames, totalUsers, activeWeekly, feedbackByType, premiumUsers, premiumCancelling } = await getAnalytics();
 
   const statusMap: Record<string, number> = {};
   for (const r of statusCounts) statusMap[r.status] = r._count.id;
@@ -335,6 +339,18 @@ export default async function AnalyticsPage() {
           value={fmtPct(completionRate)}
           sub="finished / (finished + abandoned)"
           tone="ok"
+        />
+        <KPI
+          code="0x05" label="PREMIUM USERS"
+          value={fmtNum(premiumUsers)}
+          sub={`${fmtPct(totalUsers > 0 ? premiumUsers / totalUsers * 100 : 0, 1)} conversion rate`}
+          tone={premiumUsers > 0 ? "warn" : "mute"}
+        />
+        <KPI
+          code="0x06" label="CHURN RISK"
+          value={fmtNum(premiumCancelling)}
+          sub="cancelling at period end"
+          tone={premiumCancelling > 0 ? "bad" : "mute"}
         />
       </div>
 
