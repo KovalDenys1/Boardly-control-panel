@@ -13,7 +13,8 @@ const links = [
   { href: "/audit",     label: "audit",     cmd: "05" },
   { href: "/analytics", label: "analytics", cmd: "06" },
   { href: "/feedback",  label: "feedback",  cmd: "07" },
-  { href: "/help",      label: "help",      cmd: "08" },
+  { href: "/ops",       label: "ops",       cmd: "08" },
+  { href: "/help",      label: "help",      cmd: "09" },
 ];
 
 export function Sidebar({ email }: { email: string }) {
