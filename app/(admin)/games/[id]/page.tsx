@@ -148,6 +148,17 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   const botPlayers   = game.Players.filter((p) =>  p.Users.Bots);
   const isFinished   = game.status === "finished";
 
+  type TerminalMeta = {
+    outcome?: string;
+    winnerUserId?: string | null;
+    isDraw?: boolean;
+    reason?: string;
+  };
+  const meta = game.terminalMetadata ? (game.terminalMetadata as TerminalMeta) : null;
+  const winner = meta?.winnerUserId
+    ? (game.Players.find((p) => p.Users.id === meta.winnerUserId)?.Users.username ?? meta.winnerUserId)
+    : null;
+
   const gameInfoRows: [string, React.ReactNode][] = [
     ["game type",    gameTypeLabels[game.gameType] ?? game.gameType],
     ["lobby code",   lobby ? <span style={{ color: "var(--accent)" }}>{lobby.code}</span> : "—"],
@@ -232,6 +243,19 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
       {lobby && (
         <SectionBox title="lobby_config">
           <InfoGrid rows={lobbyRows} />
+        </SectionBox>
+      )}
+
+      {meta && (
+        <SectionBox title="game_result">
+          <InfoGrid rows={[
+            ["outcome",  meta.outcome ?? "—"],
+            ["is draw",  meta.isDraw === true ? <span style={{ color: "var(--warn)" }}>yes</span> : meta.isDraw === false ? "no" : "—"],
+            ["winner",   winner
+              ? <span style={{ color: "var(--ok)" }}>{winner}</span>
+              : meta.isDraw ? <span style={{ color: "var(--mute)" }}>draw</span> : "—"],
+            ["reason",   meta.reason ?? "—"],
+          ]} />
         </SectionBox>
       )}
 
