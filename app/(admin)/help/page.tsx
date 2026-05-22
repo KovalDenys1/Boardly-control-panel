@@ -134,7 +134,7 @@ export default function HelpPage() {
         <SectionBox code="man.06" title="Monitor — live game sessions">
           <p>
             The <span style={{ color: "var(--accent)" }}>monitor</span> page shows all currently active game sessions in real time.
-            The list auto-refreshes every 15 seconds.
+            The list auto-refreshes every 30 seconds.
           </p>
           <ul className="bk-help-ul">
             <li>Elapsed time updates live while you are on the page</li>
