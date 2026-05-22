@@ -32,6 +32,7 @@ async function getUsers(page: number, q: string, role: string, status: string, s
   if (status === "active") where.suspended = false;
   if (status === "suspended") where.suspended = true;
   if (status === "premium") where.premiumUntil = { gt: new Date() };
+  if (status === "unverified") where.emailVerified = null;
 
   let orderBy: Prisma.UsersOrderByWithRelationInput = { createdAt: "desc" };
   if (sort === "username") orderBy = { username: d };
@@ -42,13 +43,13 @@ async function getUsers(page: number, q: string, role: string, status: string, s
   else if (sort === "status") orderBy = { suspended: d };
   else if (sort === "premium") orderBy = { premiumUntil: { sort: d, nulls: d === "asc" ? "first" : "last" } };
 
-  const [raw, total, filteredTotal, suspendedTotal, premiumTotal] = await Promise.all([
+  const [raw, total, filteredTotal, suspendedTotal, premiumTotal, unverifiedTotal] = await Promise.all([
     prisma.users.findMany({
       where,
       select: {
         id: true, email: true, username: true, role: true,
         suspended: true, banReason: true, banExpiresAt: true,
-        createdAt: true, lastActiveAt: true, premiumUntil: true,
+        createdAt: true, lastActiveAt: true, premiumUntil: true, emailVerified: true,
       },
       orderBy,
       skip: (page - 1) * PAGE_SIZE,
@@ -58,9 +59,10 @@ async function getUsers(page: number, q: string, role: string, status: string, s
     prisma.users.count({ where }),
     prisma.users.count({ where: { isGuest: false, suspended: true } }),
     prisma.users.count({ where: { isGuest: false, premiumUntil: { gt: new Date() } } }),
+    prisma.users.count({ where: { isGuest: false, emailVerified: null, passwordHash: { not: null } } }),
   ]);
 
-  return { raw, total, filteredTotal, suspendedTotal, premiumTotal };
+  return { raw, total, filteredTotal, suspendedTotal, premiumTotal, unverifiedTotal };
 }
 
 async function toggleSuspend(
@@ -97,7 +99,7 @@ export default async function UsersPage({
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const adminId = session!.user!.id!;
-  const { raw, total, filteredTotal, suspendedTotal, premiumTotal } = await getUsers(page, q, role, status, sort, dir);
+  const { raw, total, filteredTotal, suspendedTotal, premiumTotal, unverifiedTotal } = await getUsers(page, q, role, status, sort, dir);
   const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
 
   const currentSort = (["username", "role", "createdAt", "lastActiveAt", "online", "status", "premium"].includes(sort) ? sort : null) as SortKey | null;
@@ -109,6 +111,7 @@ export default async function UsersPage({
     createdAt: u.createdAt.toISOString(),
     lastActiveAt: u.lastActiveAt.toISOString(),
     premiumUntil: u.premiumUntil?.toISOString() ?? null,
+    emailVerified: u.emailVerified?.toISOString() ?? null,
   }));
 
   async function handleSuspend(formData: FormData) {
@@ -145,6 +148,13 @@ export default async function UsersPage({
             </p>
           </div>
           <div className="bk-pill-row">
+            {unverifiedTotal > 0 && (
+              <span className="bk-pill bk-pill--bad">
+                <span className="bk-pill-count">{unverifiedTotal}</span>
+                <span className="bk-pill-sep">·</span>
+                <span>UNVERIFIED</span>
+              </span>
+            )}
             <span className={`bk-pill bk-pill--${premiumTotal > 0 ? "warn" : "mute"}`}>
               <span className="bk-pill-count">{premiumTotal}</span>
               <span className="bk-pill-sep">·</span>

@@ -14,6 +14,7 @@ export type UserRow = {
   createdAt: string;
   lastActiveAt: string;
   premiumUntil: string | null;
+  emailVerified: string | null;
 };
 
 type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status" | "premium";
@@ -153,6 +154,7 @@ export function UsersTable({
             <option value="active">active</option>
             <option value="suspended">suspended</option>
             <option value="premium">premium</option>
+            <option value="unverified">unverified</option>
           </select>
           <span className="bk-select-brk">]</span>
         </div>
@@ -214,7 +216,14 @@ export function UsersTable({
                       </div>
                     </div>
                   ) : (
-                    <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span></span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ACTIVE<span className="bk-brk-r">]</span></span>
+                      {!user.emailVerified && (
+                        <span className="bk-brk bk-brk--warn" style={{ fontSize: 10 }} title="Email not verified">
+                          <span className="bk-brk-l">[</span>!<span className="bk-brk-r">]</span>
+                        </span>
+                      )}
+                    </div>
                   )}
                 </td>
                 <td>
