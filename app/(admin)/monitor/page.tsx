@@ -20,7 +20,7 @@ async function getActiveSessions() {
       Players: { where: { Users: { Bots: null } }, select: { id: true } },
       Lobbies: {
         select: {
-          code: true, name: true, maxPlayers: true, theme: true, minPlayers: true,
+          code: true, name: true, maxPlayers: true, theme: true,
           Users: { select: { username: true, email: true } },
         },
       },
@@ -35,7 +35,6 @@ async function getActiveSessions() {
     startedAt: s.startedAt?.toISOString() ?? null,
     playerCount: s.Players.length,
     maxPlayers: s.Lobbies?.maxPlayers ?? null,
-    minPlayers: s.Lobbies?.minPlayers ?? null,
     lobbyCode: s.Lobbies?.code ?? null,
     lobbyName: s.Lobbies?.name ?? null,
     lobbyTheme: s.Lobbies?.theme ?? "default",

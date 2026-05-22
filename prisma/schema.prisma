@@ -202,7 +202,6 @@ model Lobbies {
   maxSpectators   Int            @default(10)
   spectatorCount  Int            @default(0)
   theme           String         @default("default")
-  minPlayers      Int?
   Games           Games[]
   Users           Users?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   LobbyInvites    LobbyInvites[]

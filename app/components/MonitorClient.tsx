@@ -11,7 +11,6 @@ type Session = {
   startedAt: string | null;
   playerCount: number;
   maxPlayers: number | null;
-  minPlayers: number | null;
   lobbyCode: string | null;
   lobbyName: string | null;
   lobbyTheme: string;
@@ -113,7 +112,6 @@ export function MonitorClient({ sessions }: { sessions: Session[] }) {
               </td>
               <td style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}>
                 {s.playerCount}{s.maxPlayers ? `/${s.maxPlayers}` : ""}
-                {s.minPlayers ? <span style={{ color: "var(--mute-2)" }}>{` (min ${s.minPlayers})`}</span> : null}
               </td>
               <td style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontVariantNumeric: "tabular-nums" }} suppressHydrationWarning>
                 {elapsed(s.startedAt ?? s.createdAt)}
