@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             <span className="bk-stat-label">REGISTERED USERS</span>
           </div>
           <div className="bk-stat-value">{totalUsers.toLocaleString()}</div>
-          <div className="bk-stat-sub">{registeredUsers.toLocaleString()} active accounts</div>
+          <div className="bk-stat-sub">{registeredUsers.toLocaleString()} active · {suspendedUsers} suspended</div>
         </Link>
 
         {/* Suspended */}
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
             )}
           </div>
           <div className="bk-stat-value">{suspendedUsers}</div>
-          <div className="bk-stat-sub">require administrator review</div>
+          <div className="bk-stat-sub">accounts currently suspended</div>
         </Link>
 
         {/* Active Games */}
