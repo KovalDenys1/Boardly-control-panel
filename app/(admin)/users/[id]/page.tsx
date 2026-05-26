@@ -34,6 +34,10 @@ async function getUser(id: string) {
   });
 }
 
+async function getTotalGames(userId: string) {
+  return prisma.players.count({ where: { userId, Users: { Bots: null } } });
+}
+
 async function getAuditLog(userId: string) {
   return prisma.adminAuditLogs.findMany({
     where: { targetId: userId },
@@ -55,7 +59,7 @@ const ONLINE_MS = 10 * 60 * 1000;
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [user, auditLog, session] = await Promise.all([getUser(id), getAuditLog(id), auth()]);
+  const [user, auditLog, totalGames, session] = await Promise.all([getUser(id), getAuditLog(id), getTotalGames(id), auth()]);
   if (!user) notFound();
   const adminId = session!.user!.id!;
 
@@ -303,6 +307,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         <div className="bk-section-head">
           <span className="bk-section-bracket">┌─</span>
           <span className="bk-section-title">game_history</span>
+            <span className="bk-section-meta bk-mute" style={{ marginLeft: 8, fontSize: "var(--fz-xs)" }}>{totalGames} total</span>
           <span className="bk-section-fill" style={{ color: "var(--mute-2)" }}>{"─".repeat(60)}</span>
           <span className="bk-section-bracket">─┐</span>
         </div>
@@ -349,7 +354,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
             </table>
             {user.Players.length === 0 && <div className="bk-empty">no games played</div>}
             <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
-              {user.Players.length} recent games shown · click game name to open session detail
+              {user.Players.length} shown · {totalGames} total · click game name to open session detail
             </div>
           </div>
         </div>
