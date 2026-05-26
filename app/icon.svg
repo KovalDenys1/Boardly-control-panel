@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#050706"/>
-  <rect x="1" y="1" width="30" height="30" fill="none" stroke="#00ff41" stroke-width="1" opacity="0.4"/>
-  <text x="4" y="21" font-family="monospace,Courier New,monospace" font-size="13" font-weight="700" fill="#00ff41">$_</text>
-</svg>
