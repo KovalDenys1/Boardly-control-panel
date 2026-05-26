@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { fmt } from "@/lib/fmt";
+import { FeedbackSearch } from "@/app/components/FeedbackSearch";
 import Link from "next/link";
 
 const PAGE_SIZE = 40;
@@ -13,9 +14,16 @@ const typeColor: Record<string, string> = {
   other:       "var(--mute)",
 };
 
-async function getFeedback(page: number, typeFilter: string) {
-  const where = typeFilter ? { type: typeFilter } : {};
-  const [rows, total, typeCounts] = await Promise.all([
+async function getFeedback(page: number, typeFilter: string, q: string) {
+  const where: { type?: string; OR?: object[] } = {};
+  if (typeFilter) where.type = typeFilter;
+  if (q) {
+    where.OR = [
+      { message: { contains: q, mode: "insensitive" } },
+      { email: { contains: q, mode: "insensitive" } },
+    ];
+  }
+  const [rows, total, filteredTotal, typeCounts] = await Promise.all([
     prisma.feedback.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -27,24 +35,26 @@ async function getFeedback(page: number, typeFilter: string) {
         Users: { select: { id: true, username: true, email: true } },
       },
     }),
+    prisma.feedback.count(),
     prisma.feedback.count({ where }),
     prisma.feedback.groupBy({ by: ["type"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
   ]);
-  return { rows, total, typeCounts };
+  return { rows, total, filteredTotal, typeCounts };
 }
 
 export default async function FeedbackPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; type?: string }>;
+  searchParams: Promise<{ page?: string; type?: string; q?: string }>;
 }) {
-  const { page: pageParam, type = "" } = await searchParams;
+  const { page: pageParam, type = "", q = "" } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const { rows, total, typeCounts } = await getFeedback(page, type);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const { rows, total, filteredTotal, typeCounts } = await getFeedback(page, type, q);
+  const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
   const grandTotal = typeCounts.reduce((s, t) => s + t._count.id, 0);
 
-  const paginationParams = type ? `&type=${type}` : "";
+  const paginationParams = [type && `type=${type}`, q && `q=${q}`].filter(Boolean).join("&");
+  const paginationSuffix = paginationParams ? `&${paginationParams}` : "";
 
   return (
     <div className="bk-page">
@@ -72,6 +82,8 @@ export default async function FeedbackPage({
           </div>
         </div>
       </div>
+
+      <FeedbackSearch total={total} filteredTotal={filteredTotal} />
 
       <div className="bk-table-wrap">
         <table className="bk-table">
@@ -143,33 +155,39 @@ export default async function FeedbackPage({
       </div>
 
       <div className="bk-table-foot bk-table-foot-nav">
-        <span>{total} records{type ? ` · filtered by "${type}"` : ""}</span>
+        <span>
+          {filteredTotal} records
+          {type ? ` · type: "${type}"` : ""}
+          {q ? ` · q: "${q}"` : ""}
+          {(type || q) ? ` · ${total} total` : ""}
+        </span>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {page > 1 && (
-            <Link href={`/feedback?page=1${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+            <Link href={`/feedback?page=1${paginationSuffix}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
               <span className="bk-btn-brk">[</span><span>«</span><span className="bk-btn-brk">]</span>
             </Link>
           )}
           {page > 1 && (
-            <Link href={`/feedback?page=${page - 1}${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+            <Link href={`/feedback?page=${page - 1}${paginationSuffix}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
               <span className="bk-btn-brk">[</span><span>←</span><span className="bk-btn-brk">]</span>
             </Link>
           )}
           <form action="/feedback" method="get" className="bk-page-form">
             {type && <input type="hidden" name="type" value={type} />}
+            {q && <input type="hidden" name="q" value={q} />}
             <span className="bk-page-form-brk">[</span>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" name="page" defaultValue={page} style={{ width: `${String(totalPages).length}ch` }} className="bk-page-input-inline" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" name="page" defaultValue={page} style={{ width: `${String(Math.max(totalPages, 1)).length}ch` }} className="bk-page-input-inline" />
             <span>/</span>
             <span style={{ fontWeight: 600, color: "var(--fg-strong)" }}>{totalPages}</span>
             <span className="bk-page-form-brk">]</span>
           </form>
           {page < totalPages && (
-            <Link href={`/feedback?page=${page + 1}${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+            <Link href={`/feedback?page=${page + 1}${paginationSuffix}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
               <span className="bk-btn-brk">[</span><span>→</span><span className="bk-btn-brk">]</span>
             </Link>
           )}
           {page < totalPages && (
-            <Link href={`/feedback?page=${totalPages}${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+            <Link href={`/feedback?page=${totalPages}${paginationSuffix}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
               <span className="bk-btn-brk">[</span><span>»</span><span className="bk-btn-brk">]</span>
             </Link>
           )}
