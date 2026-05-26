@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fmt } from "@/lib/fmt";
 import { FeedbackSearch } from "@/app/components/FeedbackSearch";
+import { FeedbackStatusSelect } from "@/app/components/FeedbackStatusSelect";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
@@ -16,19 +17,7 @@ const typeColor: Record<string, string> = {
   other:       "var(--mute)",
 };
 
-const STATUS_CYCLE: Record<string, string> = {
-  open:         "acknowledged",
-  acknowledged: "done",
-  done:         "wont_fix",
-  wont_fix:     "open",
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  open:         "var(--mute)",
-  acknowledged: "var(--accent)",
-  done:         "var(--ok)",
-  wont_fix:     "var(--bad)",
-};
+const VALID_STATUSES = new Set(["open", "acknowledged", "done", "wont_fix"]);
 
 async function getFeedback(page: number, typeFilter: string, q: string) {
   const where: { type?: string; OR?: object[] } = {};
@@ -58,14 +47,14 @@ async function getFeedback(page: number, typeFilter: string, q: string) {
   return { rows, total, filteredTotal, typeCounts };
 }
 
-async function cycleStatus(formData: FormData) {
+async function setStatus(formData: FormData) {
   "use server";
   const session = await auth();
   if (!session?.user || (session.user as { role?: string }).role !== "admin") return;
 
   const id = formData.get("id") as string;
-  const current = formData.get("status") as string;
-  const next = STATUS_CYCLE[current] ?? "open";
+  const next = formData.get("status") as string;
+  if (!VALID_STATUSES.has(next)) return;
 
   const row = await prisma.feedback.update({
     where: { id },
@@ -84,6 +73,7 @@ async function cycleStatus(formData: FormData) {
         status: "sent",
         dedupeKey: `feedback_thanks:${id}`,
         payload: { message: row.message?.slice(0, 120) ?? null, href: "/" },
+        createdAt: now,
         processedAt: now,
         sentAt: now,
         updatedAt: now,
@@ -172,21 +162,12 @@ export default async function FeedbackPage({
                     </span>
                   </td>
                   <td>
-                    <form action={cycleStatus}>
-                      <input type="hidden" name="id" value={row.id} />
-                      <input type="hidden" name="status" value={row.status} />
-                      <button type="submit" title="Click to advance status" style={{
-                        background: "none", border: "none", cursor: "pointer", padding: 0,
-                        color: STATUS_COLOR[row.status] ?? "var(--mute)",
-                        fontWeight: 600, fontSize: "var(--fz-xs)", letterSpacing: "0.06em",
-                        fontFamily: "inherit",
-                      }}>
-                        {row.status.replace(/_/g, ".")}
-                        {row.status === "done" && row.Users && (
-                          <span title="Notification sent to user" style={{ marginLeft: 4, color: "var(--ok)" }}>✓</span>
-                        )}
-                      </button>
-                    </form>
+                    <FeedbackStatusSelect
+                      id={row.id}
+                      currentStatus={row.status}
+                      hasUser={!!row.Users}
+                      action={setStatus}
+                    />
                   </td>
                   <td style={{ maxWidth: 360 }}>
                     <div style={{ color: "var(--fg)", fontSize: "var(--fz-xs)", lineHeight: 1.5 }}>
