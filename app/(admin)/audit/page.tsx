@@ -1,12 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { fmt } from "@/lib/fmt";
+import { AuditFilter } from "@/app/components/AuditFilter";
 import Link from "next/link";
 
 const PAGE_SIZE = 30;
 
-async function getLogs(page: number) {
-  const [logs, total] = await Promise.all([
+const actionColor: Record<string, string> = {
+  suspend_user:   "var(--bad)",
+  unsuspend_user: "var(--accent)",
+  force_end_game: "var(--warn)",
+};
+
+async function getLogs(page: number, action: string) {
+  const where = action ? { action } : {};
+  const [logs, total, filteredTotal] = await Promise.all([
     prisma.adminAuditLogs.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
@@ -17,24 +26,21 @@ async function getLogs(page: number) {
       },
     }),
     prisma.adminAuditLogs.count(),
+    prisma.adminAuditLogs.count({ where }),
   ]);
-  return { logs, total };
+  return { logs, total, filteredTotal };
 }
-
-const actionColor: Record<string, string> = {
-  suspend_user:   "var(--bad)",
-  unsuspend_user: "var(--accent)",
-};
 
 export default async function AuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; action?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, action = "" } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const { logs, total } = await getLogs(page);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const { logs, total, filteredTotal } = await getLogs(page, action);
+  const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
+  const paginationParams = action ? `&action=${action}` : "";
 
   return (
     <div className="bk-page">
@@ -54,6 +60,8 @@ export default async function AuditPage({
           </div>
         </div>
       </div>
+
+      <AuditFilter total={total} filteredTotal={filteredTotal} />
 
       <div className="bk-table-wrap">
         <table className="bk-table">
@@ -99,6 +107,12 @@ export default async function AuditPage({
                             {log.targetId.slice(0, 8)}…
                           </div>
                         </Link>
+                      ) : log.targetType === "game" ? (
+                        <Link href={`/games/${log.targetId}`} style={{ textDecoration: "none" }}>
+                          <div style={{ fontSize: "var(--fz-xs)", color: "var(--accent)", fontFamily: "var(--mono)" }}>
+                            {log.targetId.slice(0, 8)}…
+                          </div>
+                        </Link>
                       ) : (
                         <div style={{ fontSize: "var(--fz-xs)", color: "var(--mute-2)", fontFamily: "var(--mono)" }}>
                           {log.targetId.slice(0, 8)}…
@@ -126,33 +140,34 @@ export default async function AuditPage({
         )}
         <div className="bk-table-foot bk-table-foot-nav">
           <span style={{ color: "var(--mute)" }}>
-            page {page} of {totalPages} · {total} total entries
+            {filteredTotal} records{action ? ` · filtered by "${action.replace(/_/g, " ")}"` : ""} · {total} total
           </span>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {page > 1 && (
-              <Link href="/audit?page=1" className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+              <Link href={`/audit?page=1${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
                 <span className="bk-btn-brk">[</span><span>«</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
             {page > 1 && (
-              <Link href={`/audit?page=${page - 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+              <Link href={`/audit?page=${page - 1}${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
                 <span className="bk-btn-brk">[</span><span>←</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
             <form action="/audit" method="get" className="bk-page-form">
+              {action && <input type="hidden" name="action" value={action} />}
               <span className="bk-page-form-brk">[</span>
-              <input type="text" inputMode="numeric" pattern="[0-9]*" name="page" defaultValue={page} style={{ width: `${String(totalPages).length}ch` }} className="bk-page-input-inline" />
+              <input type="text" inputMode="numeric" pattern="[0-9]*" name="page" defaultValue={page} style={{ width: `${String(Math.max(totalPages, 1)).length}ch` }} className="bk-page-input-inline" />
               <span>/</span>
               <span style={{ fontWeight: 600, color: "var(--fg-strong)" }}>{totalPages}</span>
               <span className="bk-page-form-brk">]</span>
             </form>
             {page < totalPages && (
-              <Link href={`/audit?page=${page + 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+              <Link href={`/audit?page=${page + 1}${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
                 <span className="bk-btn-brk">[</span><span>→</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
             {page < totalPages && (
-              <Link href={`/audit?page=${totalPages}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+              <Link href={`/audit?page=${totalPages}${paginationParams}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
                 <span className="bk-btn-brk">[</span><span>»</span><span className="bk-btn-brk">]</span>
               </Link>
             )}
