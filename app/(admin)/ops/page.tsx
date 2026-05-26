@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { fmt, fmtMs } from "@/lib/fmt";
 
-async function getOpsData() {
+const EVENTS_PAGE_SIZE = 50;
+
+async function getOpsData(epage: number) {
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  const [openAlerts, allAlerts, eventCounts, latencyEvents, recentEvents] = await Promise.all([
+  const [openAlerts, allAlerts, eventCounts, latencyEvents, recentEvents, eventsTotal] = await Promise.all([
     prisma.operationalAlertStates.findMany({
       where: { isOpen: true },
       orderBy: { lastTriggeredAt: "desc" },
@@ -25,13 +27,15 @@ async function getOpsData() {
     prisma.operationalEvents.findMany({
       where: { occurredAt: { gte: since24h } },
       orderBy: { occurredAt: "desc" },
-      take: 50,
+      skip: (epage - 1) * EVENTS_PAGE_SIZE,
+      take: EVENTS_PAGE_SIZE,
       select: {
         id: true, eventName: true, metricType: true,
         success: true, applied: true, latencyMs: true,
         reason: true, gameType: true, occurredAt: true,
       },
     }),
+    prisma.operationalEvents.count({ where: { occurredAt: { gte: since24h } } }),
   ]);
 
   // Latency summary per event name
@@ -51,7 +55,7 @@ async function getOpsData() {
     entry.passRate = entry.count > 0 ? Math.round((entry.passRate / entry.count) * 100) : 0;
   }
 
-  return { openAlerts, allAlerts, eventCounts, latencyMap, recentEvents };
+  return { openAlerts, allAlerts, eventCounts, latencyMap, recentEvents, eventsTotal };
 }
 
 const metricTone: Record<string, string> = {
@@ -61,8 +65,15 @@ const metricTone: Record<string, string> = {
   flow:         "mute",
 };
 
-export default async function OpsPage() {
-  const { openAlerts, allAlerts, eventCounts, latencyMap, recentEvents } = await getOpsData();
+export default async function OpsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ epage?: string }>;
+}) {
+  const { epage: epageParam } = await searchParams;
+  const epage = Math.max(1, parseInt(epageParam ?? "1", 10) || 1);
+  const { openAlerts, allAlerts, eventCounts, latencyMap, recentEvents, eventsTotal } = await getOpsData(epage);
+  const eventsTotalPages = Math.ceil(eventsTotal / EVENTS_PAGE_SIZE);
 
   const latencyRows = Object.entries(latencyMap).sort((a, b) => b[1].count - a[1].count);
 
@@ -309,8 +320,30 @@ export default async function OpsPage() {
                   })}
                 </tbody>
               </table>
-              <div className="bk-table-foot" style={{ color: "var(--mute)" }}>
-                {recentEvents.length} most recent events · last 24h · socket_reconnect_* events are from the decommissioned Socket.IO era (removed 2026-05-21)
+              <div className="bk-table-foot bk-table-foot-nav">
+                <span>{eventsTotal} events in last 24h · page {epage} of {eventsTotalPages}</span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {epage > 1 && (
+                    <a href={`/ops?epage=1`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                      <span className="bk-btn-brk">[</span><span>«</span><span className="bk-btn-brk">]</span>
+                    </a>
+                  )}
+                  {epage > 1 && (
+                    <a href={`/ops?epage=${epage - 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                      <span className="bk-btn-brk">[</span><span>←</span><span className="bk-btn-brk">]</span>
+                    </a>
+                  )}
+                  {epage < eventsTotalPages && (
+                    <a href={`/ops?epage=${epage + 1}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                      <span className="bk-btn-brk">[</span><span>→</span><span className="bk-btn-brk">]</span>
+                    </a>
+                  )}
+                  {epage < eventsTotalPages && (
+                    <a href={`/ops?epage=${eventsTotalPages}`} className="bk-btn bk-btn--neutral" style={{ padding: "4px 10px", fontSize: "var(--fz-xs)" }}>
+                      <span className="bk-btn-brk">[</span><span>»</span><span className="bk-btn-brk">]</span>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           )}
