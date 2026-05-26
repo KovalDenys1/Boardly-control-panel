@@ -403,6 +403,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-act-date { color: var(--fg); white-space: nowrap; }
 .bk-act-bar  { font-size: 12px; overflow: hidden; white-space: nowrap; }
 .bk-act-cnt  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.bk-act-drill { text-decoration: none; cursor: pointer; transition: opacity 0.1s; }
+.bk-act-drill:hover { opacity: 0.65; }
 
 /* ── Page number input ───────────────────────────────────────────────── */
 .bk-page-input-inline {

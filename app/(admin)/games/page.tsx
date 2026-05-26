@@ -7,7 +7,7 @@ const PAGE_SIZE = 50;
 
 type SortKey = "status" | "playerCount" | "createdAt" | "startedAt" | "endedAt" | "durationSeconds";
 
-async function getGames(page: number, typeFilter: string, statusFilter: string, q: string, sort: string, dir: string) {
+async function getGames(page: number, typeFilter: string, statusFilter: string, q: string, sort: string, dir: string, date: string) {
   const d = dir === "asc" ? "asc" : ("desc" as const);
 
   const where: Prisma.GamesWhereInput = {};
@@ -24,6 +24,11 @@ async function getGames(page: number, typeFilter: string, statusFilter: string, 
         ],
       },
     };
+  }
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const start = new Date(`${date}T00:00:00.000Z`);
+    const end = new Date(`${date}T23:59:59.999Z`);
+    where.createdAt = { gte: start, lte: end };
   }
 
   let orderBy: Prisma.GamesOrderByWithRelationInput = { createdAt: "desc" };
@@ -64,11 +69,11 @@ async function getGames(page: number, typeFilter: string, statusFilter: string, 
 export default async function GamesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; type?: string; status?: string; q?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ page?: string; type?: string; status?: string; q?: string; sort?: string; dir?: string; date?: string }>;
 }) {
-  const { page: pageParam, type = "", status = "", q = "", sort = "", dir = "" } = await searchParams;
+  const { page: pageParam, type = "", status = "", q = "", sort = "", dir = "", date = "" } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const { raw, total, filteredTotal, counts } = await getGames(page, type, status, q, sort, dir);
+  const { raw, total, filteredTotal, counts } = await getGames(page, type, status, q, sort, dir, date);
   const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
 
   const currentSort = (["status", "playerCount", "createdAt", "startedAt", "endedAt", "durationSeconds"].includes(sort) ? sort : null) as SortKey | null;
@@ -98,6 +103,9 @@ export default async function GamesPage({
             <h1 className="bk-page-title">games<span className="bk-stat-cursor">▊</span></h1>
             <p className="bk-page-sub">
               {"// "}{total}{" sessions · page "}{page}{" of "}{totalPages}{" · click row for details"}
+              {date && (
+                <> · <span style={{ color: "var(--accent)" }}>played on {date}</span>{" "}<Link href="/games" style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>[×clear]</Link></>
+              )}
             </p>
           </div>
           <div className="bk-pill-row">

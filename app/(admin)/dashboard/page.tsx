@@ -200,27 +200,49 @@ export default async function DashboardPage() {
             const gFill = maxGames > 0 ? Math.round((gc / maxGames) * BAR) : 0;
             const uFill = maxUsers > 0 ? Math.round((uc / maxUsers) * BAR) : 0;
             const isToday = d.key === todayKey;
+            const gamesHref = `/games?date=${d.key}`;
+            const usersHref = `/users?date=${d.key}`;
             return (
               <div key={d.key} className={`bk-act-row${isToday ? ' bk-act-row--today' : ''}`}>
                 <span className="bk-act-date">
                   {isToday && <span style={{ color: 'var(--accent)', marginRight: 4 }}>▶</span>}
                   {d.label}
                 </span>
-                <span className="bk-act-bar">
-                  <span style={{ color: 'var(--accent)', letterSpacing: '-0.5px' }}>{'█'.repeat(gFill)}</span>
-                  <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - gFill)}</span>
-                </span>
-                <span className="bk-act-cnt" style={{ color: gc > 0 ? 'var(--accent)' : 'var(--mute-2)' }}>
-                  {gc}
-                </span>
+                {gc > 0 ? (
+                  <Link href={gamesHref} className="bk-act-bar bk-act-drill">
+                    <span style={{ color: 'var(--accent)', letterSpacing: '-0.5px' }}>{'█'.repeat(gFill)}</span>
+                    <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - gFill)}</span>
+                  </Link>
+                ) : (
+                  <span className="bk-act-bar">
+                    <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR)}</span>
+                  </span>
+                )}
+                {gc > 0 ? (
+                  <Link href={gamesHref} className="bk-act-cnt bk-act-drill" style={{ color: 'var(--accent)' }}>
+                    {gc}
+                  </Link>
+                ) : (
+                  <span className="bk-act-cnt" style={{ color: 'var(--mute-2)' }}>{gc}</span>
+                )}
                 <span style={{ color: 'var(--line-2)', textAlign: 'center' }}>│</span>
-                <span className="bk-act-bar">
-                  <span style={{ color: 'var(--mute)', letterSpacing: '-0.5px' }}>{'█'.repeat(uFill)}</span>
-                  <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - uFill)}</span>
-                </span>
-                <span className="bk-act-cnt" style={{ color: uc > 0 ? 'var(--fg)' : 'var(--mute-2)' }}>
-                  {uc}
-                </span>
+                {uc > 0 ? (
+                  <Link href={usersHref} className="bk-act-bar bk-act-drill">
+                    <span style={{ color: 'var(--mute)', letterSpacing: '-0.5px' }}>{'█'.repeat(uFill)}</span>
+                    <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR - uFill)}</span>
+                  </Link>
+                ) : (
+                  <span className="bk-act-bar">
+                    <span style={{ color: 'var(--mute-2)', letterSpacing: '-0.5px' }}>{'░'.repeat(BAR)}</span>
+                  </span>
+                )}
+                {uc > 0 ? (
+                  <Link href={usersHref} className="bk-act-cnt bk-act-drill" style={{ color: 'var(--fg)' }}>
+                    {uc}
+                  </Link>
+                ) : (
+                  <span className="bk-act-cnt" style={{ color: 'var(--mute-2)' }}>{uc}</span>
+                )}
               </div>
             );
           })}

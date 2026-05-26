@@ -16,7 +16,7 @@ const PAGE_SIZE = 50;
 
 type SortKey = "username" | "role" | "createdAt" | "lastActiveAt" | "online" | "status" | "premium";
 
-async function getUsers(page: number, q: string, role: string, status: string, sort: string, dir: string) {
+async function getUsers(page: number, q: string, role: string, status: string, sort: string, dir: string, date: string) {
   await liftExpiredBans();
 
   const d = dir === "asc" ? "asc" : ("desc" as const);
@@ -33,6 +33,11 @@ async function getUsers(page: number, q: string, role: string, status: string, s
   if (status === "suspended") where.suspended = true;
   if (status === "premium") where.premiumUntil = { gt: new Date() };
   if (status === "unverified") where.emailVerified = null;
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const start = new Date(`${date}T00:00:00.000Z`);
+    const end = new Date(`${date}T23:59:59.999Z`);
+    where.createdAt = { gte: start, lte: end };
+  }
 
   let orderBy: Prisma.UsersOrderByWithRelationInput = { createdAt: "desc" };
   if (sort === "username") orderBy = { username: d };
@@ -93,13 +98,13 @@ async function toggleSuspend(
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; role?: string; status?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; role?: string; status?: string; sort?: string; dir?: string; date?: string }>;
 }) {
-  const { page: pageParam, q = "", role = "", status = "", sort = "", dir = "" } = await searchParams;
+  const { page: pageParam, q = "", role = "", status = "", sort = "", dir = "", date = "" } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const adminId = session!.user!.id!;
-  const { raw, total, filteredTotal, suspendedTotal, premiumTotal, unverifiedTotal } = await getUsers(page, q, role, status, sort, dir);
+  const { raw, total, filteredTotal, suspendedTotal, premiumTotal, unverifiedTotal } = await getUsers(page, q, role, status, sort, dir, date);
   const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
 
   const currentSort = (["username", "role", "createdAt", "lastActiveAt", "online", "status", "premium"].includes(sort) ? sort : null) as SortKey | null;
@@ -144,6 +149,9 @@ export default async function UsersPage({
               {"// "}{total}{" registered · page "}{page}{" of "}{totalPages}
               {suspendedTotal > 0 && (
                 <> · <span style={{ color: "var(--bad)" }}>{suspendedTotal} suspended</span></>
+              )}
+              {date && (
+                <> · <span style={{ color: "var(--accent)" }}>registered on {date}</span>{" "}<Link href="/users" style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>[×clear]</Link></>
               )}
             </p>
           </div>
