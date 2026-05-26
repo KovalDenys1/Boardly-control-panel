@@ -18,7 +18,7 @@ async function getGame(id: string) {
           code: true, name: true, maxPlayers: true, turnTimer: true,
           allowSpectators: true, spectatorCount: true,
           password: true,
-          Users: { select: { username: true, email: true } },
+          Users: { select: { id: true, username: true, email: true } },
         },
       },
       Players: {
@@ -145,7 +145,9 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
     ["game type",    gameTypeLabels[game.gameType] ?? game.gameType],
     ["lobby code",   lobby ? <span style={{ color: "var(--accent)" }}>{lobby.code}</span> : "—"],
     ["lobby name",   lobby?.name ?? "—"],
-    ["creator",      creator?.username ?? <span style={{ color: "var(--mute-2)" }}>—</span>],
+    ["creator",      creator?.id
+      ? <Link href={`/users/${creator.id}`} style={{ color: "var(--accent)", textDecoration: "none" }}>{creator.username ?? creator.email ?? creator.id}</Link>
+      : <span style={{ color: "var(--mute-2)" }}>—</span>],
     ["creator email", creator?.email ?? <span style={{ color: "var(--mute-2)" }}>—</span>],
     ["created",      fmt(game.createdAt)],
     ["started",      fmt(game.startedAt)],
