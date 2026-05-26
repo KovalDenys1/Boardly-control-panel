@@ -90,6 +90,7 @@ model EmailVerificationTokens {
 model Feedback {
   id        String   @id
   type      String
+  status    String   @default("open")
   message   String
   email     String?
   pageUrl   String?
@@ -481,6 +482,7 @@ enum NotificationType {
   turn_reminder
   friend_request
   friend_accepted
+  feedback_thanks
 }
 
 enum ProfileVisibility {

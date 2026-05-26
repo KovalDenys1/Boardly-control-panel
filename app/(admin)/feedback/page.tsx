@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { fmt } from "@/lib/fmt";
 import { FeedbackSearch } from "@/app/components/FeedbackSearch";
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 const PAGE_SIZE = 40;
 
@@ -12,6 +14,20 @@ const typeColor: Record<string, string> = {
   complaint:   "var(--bad)",
   praise:      "var(--ok)",
   other:       "var(--mute)",
+};
+
+const STATUS_CYCLE: Record<string, string> = {
+  open:         "acknowledged",
+  acknowledged: "done",
+  done:         "wont_fix",
+  wont_fix:     "open",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  open:         "var(--mute)",
+  acknowledged: "var(--accent)",
+  done:         "var(--ok)",
+  wont_fix:     "var(--bad)",
 };
 
 async function getFeedback(page: number, typeFilter: string, q: string) {
@@ -30,7 +46,7 @@ async function getFeedback(page: number, typeFilter: string, q: string) {
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       select: {
-        id: true, type: true, message: true, email: true,
+        id: true, type: true, status: true, message: true, email: true,
         pageUrl: true, createdAt: true,
         Users: { select: { id: true, username: true, email: true } },
       },
@@ -40,6 +56,42 @@ async function getFeedback(page: number, typeFilter: string, q: string) {
     prisma.feedback.groupBy({ by: ["type"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
   ]);
   return { rows, total, filteredTotal, typeCounts };
+}
+
+async function cycleStatus(formData: FormData) {
+  "use server";
+  const session = await auth();
+  if (!session?.user || (session.user as { role?: string }).role !== "admin") return;
+
+  const id = formData.get("id") as string;
+  const current = formData.get("status") as string;
+  const next = STATUS_CYCLE[current] ?? "open";
+
+  const row = await prisma.feedback.update({
+    where: { id },
+    data: { status: next },
+    select: { userId: true, message: true },
+  });
+
+  if (next === "done" && row.userId) {
+    const now = new Date();
+    await prisma.notifications.create({
+      data: {
+        id: crypto.randomUUID(),
+        userId: row.userId,
+        type: "feedback_thanks",
+        channel: "in_app",
+        status: "sent",
+        dedupeKey: `feedback_thanks:${id}`,
+        payload: { message: row.message?.slice(0, 120) ?? null, href: "/" },
+        processedAt: now,
+        sentAt: now,
+        updatedAt: now,
+      },
+    });
+  }
+
+  revalidatePath("/feedback");
 }
 
 export default async function FeedbackPage({
@@ -91,6 +143,7 @@ export default async function FeedbackPage({
             <tr>
               <th className="bk-th-num">#</th>
               <th>TYPE</th>
+              <th>STATUS</th>
               <th>MESSAGE</th>
               <th>USER</th>
               <th>PAGE</th>
@@ -100,7 +153,7 @@ export default async function FeedbackPage({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="bk-empty-cell">// no feedback found</td>
+                <td colSpan={7} className="bk-empty-cell">// no feedback found</td>
               </tr>
             ) : rows.map((row, i) => {
               const offset = (page - 1) * PAGE_SIZE;
@@ -117,6 +170,23 @@ export default async function FeedbackPage({
                     }}>
                       {row.type.replace(/_/g, ".")}
                     </span>
+                  </td>
+                  <td>
+                    <form action={cycleStatus}>
+                      <input type="hidden" name="id" value={row.id} />
+                      <input type="hidden" name="status" value={row.status} />
+                      <button type="submit" title="Click to advance status" style={{
+                        background: "none", border: "none", cursor: "pointer", padding: 0,
+                        color: STATUS_COLOR[row.status] ?? "var(--mute)",
+                        fontWeight: 600, fontSize: "var(--fz-xs)", letterSpacing: "0.06em",
+                        fontFamily: "inherit",
+                      }}>
+                        {row.status.replace(/_/g, ".")}
+                        {row.status === "done" && row.Users && (
+                          <span title="Notification sent to user" style={{ marginLeft: 4, color: "var(--ok)" }}>✓</span>
+                        )}
+                      </button>
+                    </form>
                   </td>
                   <td style={{ maxWidth: 360 }}>
                     <div style={{ color: "var(--fg)", fontSize: "var(--fz-xs)", lineHeight: 1.5 }}>
