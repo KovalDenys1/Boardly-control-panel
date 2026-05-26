@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { gameTypeLabels } from "@/lib/game-type-labels";
+import { fmt, fmtDur } from "@/lib/fmt";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -39,15 +41,6 @@ async function getGame(id: string) {
   });
 }
 
-const gameTypeLabels: Record<string, string> = {
-  yahtzee: "Yahtzee", tic_tac_toe: "Tic-Tac-Toe",
-  rock_paper_scissors: "Rock Paper Scissors", guess_the_spy: "Guess the Spy",
-  memory: "Memory", connect_four: "Connect Four",
-  telephone_doodle: "Telephone Doodle", sketch_and_guess: "Sketch & Guess",
-  liars_party: "Liars Party", fake_artist: "Fake Artist",
-  alias: "Alias", other: "Other",
-};
-
 function statusBadge(status: string) {
   const map: Record<string, string> = { playing: "ok", finished: "mute", abandoned: "bad", waiting: "mute", cancelled: "mute" };
   const tone = map[status] ?? "mute";
@@ -56,17 +49,6 @@ function statusBadge(status: string) {
       <span className="bk-brk-l">[</span>{status.toUpperCase()}<span className="bk-brk-r">]</span>
     </span>
   );
-}
-
-function fmt(d: Date | null) {
-  if (!d) return "—";
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
-function fmtDur(s: number | null) {
-  if (!s) return "—";
-  const m = Math.floor(s / 60), sec = s % 60;
-  return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 }
 
 function placementLabel(n: number | null) {

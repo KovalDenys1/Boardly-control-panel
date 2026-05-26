@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fmt } from "@/lib/fmt";
 import Link from "next/link";
 
 const PAGE_SIZE = 30;
@@ -24,13 +25,6 @@ const actionColor: Record<string, string> = {
   suspend_user:   "var(--bad)",
   unsuspend_user: "var(--accent)",
 };
-
-function fmt(d: Date) {
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-  });
-}
 
 export default async function AuditPage({
   searchParams,
@@ -120,7 +114,7 @@ export default async function AuditPage({
                     )}
                   </td>
                   <td style={{ fontSize: "var(--fz-xs)", color: "var(--mute)", whiteSpace: "nowrap" }}>
-                    {fmt(log.createdAt)}
+                    {fmt(log.createdAt, { seconds: true })}
                   </td>
                 </tr>
               );

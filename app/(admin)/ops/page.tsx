@@ -1,17 +1,5 @@
 import { prisma } from "@/lib/prisma";
-
-function fmt(d: Date | null | string) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
-function fmtMs(ms: number | null) {
-  if (ms === null) return "—";
-  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`;
-}
+import { fmt, fmtMs } from "@/lib/fmt";
 
 async function getOpsData() {
   const now = new Date();

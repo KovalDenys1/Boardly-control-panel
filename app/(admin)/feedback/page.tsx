@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fmt } from "@/lib/fmt";
 import Link from "next/link";
 
 const PAGE_SIZE = 40;
@@ -11,13 +12,6 @@ const typeColor: Record<string, string> = {
   praise:      "var(--ok)",
   other:       "var(--mute)",
 };
-
-function fmt(d: Date) {
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
 
 async function getFeedback(page: number, typeFilter: string) {
   const where = typeFilter ? { type: typeFilter } : {};

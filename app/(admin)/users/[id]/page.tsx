@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { gameTypeLabels } from "@/lib/game-type-labels";
+import { fmt, fmtDur } from "@/lib/fmt";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -42,29 +44,6 @@ async function getAuditLog(userId: string) {
       Users: { select: { username: true, email: true } },
     },
   });
-}
-
-const gameTypeLabels: Record<string, string> = {
-  yahtzee: "Yahtzee", tic_tac_toe: "Tic-Tac-Toe",
-  rock_paper_scissors: "Rock Paper Scissors", guess_the_spy: "Guess the Spy",
-  memory: "Memory", connect_four: "Connect Four",
-  telephone_doodle: "Telephone Doodle", sketch_and_guess: "Sketch & Guess",
-  liars_party: "Liars Party", fake_artist: "Fake Artist",
-  alias: "Alias", other: "Other",
-};
-
-function fmt(d: Date | null | string) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
-function fmtDur(s: number | null) {
-  if (!s) return "—";
-  const m = Math.floor(s / 60), sec = s % 60;
-  return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 }
 
 function placementLabel(n: number | null) {

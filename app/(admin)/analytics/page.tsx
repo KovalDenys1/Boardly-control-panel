@@ -1,20 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { gameTypeLabels } from "@/lib/game-type-labels";
+import { fmtNum, fmtPct, fmtDur } from "@/lib/fmt";
 
-const gameTypeLabels: Record<string, string> = {
-  yahtzee: "Yahtzee", tic_tac_toe: "Tic-Tac-Toe",
-  rock_paper_scissors: "RPS", guess_the_spy: "Guess Spy",
-  memory: "Memory", connect_four: "Connect Four",
-  telephone_doodle: "Tel. Doodle", sketch_and_guess: "Sketch",
-  liars_party: "Liars", fake_artist: "Fake Artist",
-  alias: "Alias", other: "Other",
-};
-
-function fmtNum(n: number) { return n.toLocaleString("en-US"); }
-function fmtPct(n: number, d = 1) { return n.toFixed(d) + "%"; }
 function fmtSec(s: number | null) {
-  if (!s) return "—";
-  const m = Math.floor(s / 60), r = s % 60;
-  return m > 0 ? `${m}m ${String(r).padStart(2, "0")}s` : `${s}s`;
+  return fmtDur(s);
 }
 function dayLabel(iso: string) {
   const d = new Date(iso + "T00:00:00Z");
