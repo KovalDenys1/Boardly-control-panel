@@ -192,10 +192,10 @@ export function GamesTable({
               <th>GAME TYPE</th>
               <th>CREATOR</th>
               <Th col="status">STATUS</Th>
-              <Th col="playerCount">PLAYERS</Th>
-              <Th col="createdAt">CREATED</Th>
-              <Th col="startedAt">STARTED</Th>
-              <Th col="endedAt">ENDED</Th>
+              <Th col="playerCount" className="bk-col-hide-mobile">PLAYERS</Th>
+              <Th col="createdAt" className="bk-col-hide-mobile">CREATED</Th>
+              <Th col="startedAt" className="bk-col-hide-tablet">STARTED</Th>
+              <Th col="endedAt" className="bk-col-hide-tablet">ENDED</Th>
               <Th col="durationSeconds" className="bk-th-right">DURATION</Th>
             </tr>
           </thead>
@@ -219,10 +219,10 @@ export function GamesTable({
                   )}
                 </td>
                 <td>{statusBadge(game.status)}</td>
-                <td style={{ color: "var(--fg)" }}>{game.playerCount}</td>
-                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmtDate(game.createdAt)}</td>
-                <td style={{ fontSize: "var(--fz-xs)" }}>{fmtDateTime(game.startedAt)}</td>
-                <td style={{ fontSize: "var(--fz-xs)" }}>{fmtDateTime(game.endedAt)}</td>
+                <td className="bk-col-hide-mobile" style={{ color: "var(--fg)" }}>{game.playerCount}</td>
+                <td className="bk-col-hide-mobile" style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmtDate(game.createdAt)}</td>
+                <td className="bk-col-hide-tablet" style={{ fontSize: "var(--fz-xs)" }}>{fmtDateTime(game.startedAt)}</td>
+                <td className="bk-col-hide-tablet" style={{ fontSize: "var(--fz-xs)" }}>{fmtDateTime(game.endedAt)}</td>
                 <td className="bk-td-right" style={{ color: "var(--fg)", fontSize: "var(--fz-xs)" }}>{fmtDur(game.durationSeconds)}</td>
               </tr>
             ))}

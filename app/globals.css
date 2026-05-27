@@ -291,7 +291,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
   letter-spacing: 0.06em; white-space: nowrap; overflow: hidden;
 }
 .bk-section-bracket { color: var(--mute); }
-.bk-section-fill    { flex: 1; overflow: hidden; }
+.bk-section-fill,
+.bk-help-fill       { flex: 1; overflow: hidden; font-size: 0; height: 1px; background: currentColor; align-self: center; }
 .bk-section-title   { color: var(--accent); margin: 0 10px; font-weight: 600; }
 .bk-section-body    {
   border-left: 1px solid var(--line); border-right: 1px solid var(--line);
@@ -316,7 +317,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .bk-table thead th {
   text-align: left; font-weight: 600; font-size: var(--fz-xs); letter-spacing: 0.14em;
   color: var(--mute); padding: 10px 14px; border-bottom: 1px solid var(--line);
-  background: rgba(0,0,0,0.3);
+  background: var(--bg-3);
+  position: sticky; top: 0; z-index: 2;
 }
 .bk-table th.bk-th-num, .bk-table td.bk-td-num { width: 56px; color: var(--mute); }
 .bk-table th.bk-th-right, .bk-table td.bk-td-right { text-align: right; }
@@ -341,6 +343,10 @@ input, button, textarea, select { font: inherit; color: inherit; }
 }
 .bk-empty { padding: 36px; text-align: center; color: var(--mute); }
 .bk-empty-cell { padding: 56px 0; text-align: center; color: var(--mute); font-size: var(--fz-xs); letter-spacing: 0.08em; font-family: var(--mono); }
+
+/* ── Responsive column visibility ───────────────────────────────────── */
+/* bk-col-hide-tablet: hidden on tablet AND mobile (≤1023px)            */
+/* bk-col-hide-mobile: hidden only on mobile (≤767px)                   */
 
 /* ── Sortable table headers ──────────────────────────────────────────── */
 .bk-th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
@@ -546,6 +552,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .bk-table-wrap {
     overflow-x: auto; -webkit-overflow-scrolling: touch;
   }
+  .bk-table { min-width: 0; }
+  .bk-col-hide-mobile { display: none; }
   .bk-page-head {
     margin-bottom: 20px;
   }
@@ -602,6 +610,24 @@ input, button, textarea, select { font: inherit; color: inherit; }
   }
   .bk-help-grid {
     max-width: 100%;
+  }
+}
+
+/* ── Tablet column hiding (≤1023px) ──────────────────────────────────── */
+@media (max-width: 1023px) {
+  .bk-col-hide-tablet { display: none; }
+}
+
+/* ── Large screens (1440px+) ─────────────────────────────────────────── */
+@media (min-width: 1440px) {
+  .bk-shell {
+    grid-template-columns: 260px 1fr;
+  }
+  .bk-main {
+    padding: 32px 48px 64px;
+  }
+  .bk-sidebar {
+    padding: 26px 22px;
   }
 }
 

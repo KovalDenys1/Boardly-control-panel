@@ -12,13 +12,13 @@ function SectionBox({
       <div className="bk-help-head">
         <span className="bk-help-code">{code}</span>
         <span className="bk-help-title">{title}</span>
-        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", color: "var(--mute-2)" }}>{fill.repeat(80)}</span>
+        <span className="bk-help-fill" style={{ color: "var(--mute-2)" }}>{fill.repeat(80)}</span>
         <span style={{ color: "var(--mute)", flexShrink: 0 }}>─┐</span>
       </div>
       <div className="bk-help-body">{children}</div>
       <div className="bk-help-head">
         <span style={{ color: "var(--mute)" }}>└</span>
-        <span style={{ flex: 1, overflow: "hidden", color: "var(--mute-2)" }}>{fill.repeat(50)}</span>
+        <span className="bk-help-fill" style={{ color: "var(--mute-2)" }}>{fill.repeat(50)}</span>
         <span style={{ color: "var(--mute)" }}>┘</span>
       </div>
     </div>

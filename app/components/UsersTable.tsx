@@ -95,7 +95,7 @@ export function UsersTable({
     return `/users?${buildParams({ sort: key, dir: newDir })}`;
   }
 
-  function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string }) {
+  function Th({ col, children, className }: { col: SortKey; children: React.ReactNode; className?: string; }) {
     const active = currentSort === col;
     return (
       <th
@@ -165,12 +165,12 @@ export function UsersTable({
             <tr>
               <th className="bk-th-num">#</th>
               <Th col="username">USER</Th>
-              <Th col="role">ROLE</Th>
-              <Th col="createdAt">JOINED</Th>
-              <Th col="lastActiveAt">LAST ACTIVE</Th>
-              <Th col="online">ONLINE</Th>
+              <Th col="role" className="bk-col-hide-mobile">ROLE</Th>
+              <Th col="createdAt" className="bk-col-hide-mobile">JOINED</Th>
+              <Th col="lastActiveAt" className="bk-col-hide-mobile">LAST ACTIVE</Th>
+              <Th col="online" className="bk-col-hide-tablet">ONLINE</Th>
               <Th col="status">STATUS</Th>
-              <Th col="premium">PREMIUM</Th>
+              <Th col="premium" className="bk-col-hide-tablet">PREMIUM</Th>
               <th className="bk-th-right">ACTION</th>
             </tr>
           </thead>
@@ -186,7 +186,7 @@ export function UsersTable({
                   <div className="bk-cell-user-name">{user.username ?? "—"}</div>
                   <div className="bk-cell-user-mail">{user.email ?? "—"}</div>
                 </td>
-                <td>
+                <td className="bk-col-hide-mobile">
                   {user.role === "admin" ? (
                     <span className="bk-brk bk-brk--accent">
                       <span className="bk-brk-l">[</span>ADMIN<span className="bk-brk-r">]</span>
@@ -195,9 +195,9 @@ export function UsersTable({
                     <span className="bk-mute">user</span>
                   )}
                 </td>
-                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.createdAt)}</td>
-                <td style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.lastActiveAt)}</td>
-                <td>
+                <td className="bk-col-hide-mobile" style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.createdAt)}</td>
+                <td className="bk-col-hide-mobile" style={{ color: "var(--mute)", fontSize: "var(--fz-xs)" }}>{fmt(user.lastActiveAt)}</td>
+                <td className="bk-col-hide-tablet">
                   {isOnline(user.lastActiveAt) ? (
                     <span className="bk-brk bk-brk--ok"><span className="bk-brk-l">[</span>ONLINE<span className="bk-brk-r">]</span></span>
                   ) : (
@@ -226,7 +226,7 @@ export function UsersTable({
                     </div>
                   )}
                 </td>
-                <td>
+                <td className="bk-col-hide-tablet">
                   {user.premiumUntil && new Date(user.premiumUntil) > new Date() ? (
                     <span className="bk-brk bk-brk--warn">
                       <span className="bk-brk-l">[</span>PREMIUM<span className="bk-brk-r">]</span>
